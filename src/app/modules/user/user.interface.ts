@@ -1,5 +1,5 @@
 import { Model } from 'mongoose';
-import { USER_ROLES } from '../../../enums/user';
+import { USER_ROLES, Verification_For } from '../../../enums/user';
 
 export type IUser = {
   name: string;
@@ -11,11 +11,20 @@ export type IUser = {
   status: 'active' | 'delete';
   verified: boolean;
   profile?: string;
-  authentication?: {
-    isResetPassword: boolean;
-    oneTimeCode: number;
-    expireAt: Date;
-  };
+  otpVerification:{
+    isVerified: {
+      status:boolean,
+      time: Date
+    },
+    otp: number,
+    time: Date,
+    verificationType:{
+      type: string,
+      enum: Verification_For,
+    }
+  },
+  privacyPolicy:string,
+  termsConditions:string,
 };
 
 export type UserModal = {

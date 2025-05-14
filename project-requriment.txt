@@ -1,0 +1,84 @@
+Auth
+    -- Login
+    -- Forgot password ( with verification code )
+        { same for admin }
+    -- Change password ( with verification code )
+        { same for admin }
+
+User
+    -- Home
+        - Story recommendations
+            - Children Stories
+            - Featured Story
+            - Popular Story
+    -- Search stories
+    -- Filtering 
+        - Types Stroy or Music
+        - By Cetegories
+        - length of artis
+        - Children age
+        - language
+
+    -- Play video 
+        - Speed controle
+        - quality controle 
+        - save to play list 
+
+    -- Play List 
+        -- All saved story or music
+
+Profile 
+    -- Update personal informaion
+    
+Subscription
+    -- Monthly
+    -- Yearly
+
+
+Admin 
+    -- Overview
+        - total users
+        - active users
+        - total revenue
+        - total subscription
+
+    -- Upload Stories
+        - Cover photo
+        - Story file
+        - Countrie Flag
+        - Story Name
+        - Singer Name
+        - Story Time
+        -- Add Description
+
+    -- Add Music
+        - Cover photo
+        - Story file
+        - Countrie Flag
+        - Story Name
+        - Singer Name
+        - Story Time
+        -- Add Description
+    
+    -- Total User
+        - All users ( filter by Active User or Block User )
+        - Delete user
+        - Block user 
+        - Unblock user
+
+    -- Subscriptions 
+        - All subscribers
+        - A subscriber
+        - 3 subscriptions ( basic, premium, family)
+            - primary data (
+                package type or the payment package
+            ),
+            - package name
+            - package validation 1 mounth of basic subscription
+
+    -- Privacy and Policy
+    -- Terms & condition
+    -- Log Out
+
+    -- Notifications
+        - on the story watching 

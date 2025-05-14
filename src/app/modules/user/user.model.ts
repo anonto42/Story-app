@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import { model, Schema } from 'mongoose';
 import config from '../../../config';
-import { USER_ROLES } from '../../../enums/user';
+import { USER_ROLES, Verification_For } from '../../../enums/user';
 import ApiError from '../../../errors/ApiError';
 import { IUser, UserModal } from './user.interface';
 
@@ -46,22 +46,28 @@ const userSchema = new Schema<IUser, UserModal>(
       type: Boolean,
       default: false,
     },
-    authentication: {
-      type: {
-        isResetPassword: {
+    otpVerification:{
+      isVerified: {
+        status:{
           type: Boolean,
-          default: false,
+          default: false
         },
-        oneTimeCode: {
-          type: Number,
-          default: null,
-        },
-        expireAt: {
-          type: Date,
-          default: null,
-        },
+        time: Date
       },
-      select: 0,
+      otp: Number,
+      time: Date,
+      verificationType:{
+        type: String,
+        enum: Verification_For,
+      }
+    },
+    privacyPolicy:{
+      type: String,
+      trim: true
+    },
+    termsConditions:{
+      type: String,
+      trim: true
     },
   },
   { timestamps: true }

@@ -6,13 +6,13 @@ import { AuthService } from './auth.service';
 
 const verifyEmail = catchAsync(async (req: Request, res: Response) => {
   const { ...verifyData } = req.body;
-  const result = await AuthService.verifyEmailToDB(verifyData);
+  const result = await AuthService.verifyOtp(verifyData);
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: result.message,
-    data: result.data,
+    message: "Successfully verify the otp authentication",
+    data: result,
   });
 });
 

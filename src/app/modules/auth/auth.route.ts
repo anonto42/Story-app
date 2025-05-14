@@ -13,13 +13,7 @@ router.post(
 );
 
 router.post(
-  '/forget-password',
-  validateRequest(AuthValidation.createForgetPasswordZodSchema),
-  AuthController.forgetPassword
-);
-
-router.post(
-  '/verify-email',
+  '/verify-otp',
   validateRequest(AuthValidation.createVerifyEmailZodSchema),
   AuthController.verifyEmail
 );

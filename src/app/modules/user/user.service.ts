@@ -1,15 +1,11 @@
 import { StatusCodes } from 'http-status-codes';
 import { JwtPayload } from 'jsonwebtoken';
-import { USER_ROLES } from '../../../enums/user';
+import { USER_ROLES, USER_STSTUS } from '../../../enums/user';
 import ApiError from '../../../errors/ApiError';
-import { emailHelper } from '../../../helpers/emailHelper';
-import { emailTemplate } from '../../../shared/emailTemplate';
 import unlinkFile from '../../../shared/unlinkFile';
-import generateOTP from '../../../util/generateOTP';
 import { IUser } from './user.interface';
 import { User } from './user.model'; 
 import { jwtHelper } from '../../../helpers/jwtHelper';
-import config from '../../../config';
 
 const createUserToDB = async (payload: Partial<IUser>) => {
 
@@ -20,7 +16,7 @@ const createUserToDB = async (payload: Partial<IUser>) => {
     email: payload.email,
     password: payload.password,
     location: payload.location, 
-    status: 'active'
+    status: USER_STSTUS.ACTIVE
   }
   
   const createUser = await User.create(userData);
@@ -28,7 +24,7 @@ const createUserToDB = async (payload: Partial<IUser>) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user');
   }
 
-  const Token = jwtHelper.createToken({userID: createUser._id,role: "USER"},config.jwt.jwt_secret!,config.jwt.jwt_expire_in!)
+  const Token = jwtHelper.createToken({userID: createUser._id.toString(),role: USER_ROLES.USER})
 
   return {createUser,Token}
 };
@@ -38,7 +34,7 @@ const getUserProfileFromDB = async (
 ): Promise<Partial<IUser>> => {
   console.log(user)
   const { userID } = user;
-  const isExistUser = await User.isExistUserById(userID);
+  const isExistUser = await User.findById(userID);
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
@@ -51,14 +47,14 @@ const updateProfileToDB = async (
   payload: Partial<IUser>
 ): Promise<Partial<IUser | null>> => {
   const { userID } = user;
-  const isExistUser = await User.isExistUserById(userID);
+  const isExistUser = await User.findById(userID);
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
   //unlink file here
   if (payload.profile) {
-    unlinkFile(isExistUser.profile);
+    unlinkFile(isExistUser.profile!);
   }
 
   const updateDoc = await User.findOneAndUpdate({ _id: userID }, payload, {

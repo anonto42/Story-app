@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import { model, Schema } from 'mongoose';
 import config from '../../../config';
-import { USER_ROLES, Verification_For } from '../../../enums/user';
+import { USER_ROLES, USER_STSTUS, Verification_For } from '../../../enums/user';
 import ApiError from '../../../errors/ApiError';
 import { IUser, UserModal } from './user.interface';
 
@@ -30,7 +30,6 @@ const userSchema = new Schema<IUser, UserModal>(
     password: {
       type: String,
       required: true,
-      select: 0,
       minlength: 8,
     },
     profile: {
@@ -39,12 +38,12 @@ const userSchema = new Schema<IUser, UserModal>(
     },
     status: {
       type: String,
-      enum: ['active', 'delete'],
-      default: 'active',
+      enum: [USER_STSTUS.ACTIVE,USER_STSTUS.DELETE],
+      default: USER_STSTUS.ACTIVE,
     },
-    verified: {
-      type: Boolean,
-      default: false,
+    subscription: {
+      type: Schema.Types.ObjectId,
+      ref:""
     },
     otpVerification:{
       isVerified: {
@@ -73,17 +72,6 @@ const userSchema = new Schema<IUser, UserModal>(
   { timestamps: true }
 );
 
-//exist user check
-userSchema.statics.isExistUserById = async (id: string) => {
-  const isExist = await User.findById(id);
-  return isExist;
-};
-
-userSchema.statics.isExistUserByEmail = async (email: string) => {
-  const isExist = await User.findOne({ email });
-  return isExist;
-};
-
 //is match password
 userSchema.statics.isMatchPassword = async (
   password: string,
@@ -92,19 +80,23 @@ userSchema.statics.isMatchPassword = async (
   return await bcrypt.compare(password, hashPassword);
 };
 
-//check user
 userSchema.pre('save', async function (next) {
-  //check user
-  const isExist = await User.findOne({ email: this.email });
-  if (isExist) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Email already exist!');
+  // Only hash the password if it's new or has been modified
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(
+      this.password,
+      Number(config.bcrypt_salt_rounds)
+    );
   }
 
-  //password hash
-  this.password = await bcrypt.hash(
-    this.password,
-    Number(config.bcrypt_salt_rounds)
-  );
+  // Don't check for existing email if it's not a new document
+  if (this.isNew) {
+    const isExist = await User.findOne({ email: this.email });
+    if (isExist) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Email already exist!');
+    }
+  }
+
   next();
 });
 

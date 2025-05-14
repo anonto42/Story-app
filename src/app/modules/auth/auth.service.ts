@@ -1,75 +1,83 @@
-import bcrypt from 'bcrypt';
-import { StatusCodes } from 'http-status-codes';
-import { JwtPayload, Secret } from 'jsonwebtoken';
-import config from '../../../config';
-import ApiError from '../../../errors/ApiError';
-import { emailHelper } from '../../../helpers/emailHelper';
-import { jwtHelper } from '../../../helpers/jwtHelper';
-import { emailTemplate } from '../../../shared/emailTemplate';
-import {
-  IAuthResetPassword,
-  IChangePassword,
-  ILoginData,
-  IVerifyEmail,
-} from '../../../types/auth';
-import cryptoToken from '../../../util/cryptoToken';
-import generateOTP from '../../../util/generateOTP';
-import { ResetToken } from '../resetToken/resetToken.model';
-import { User } from '../user/user.model';
+import { StatusCodes } from "http-status-codes";
+import { User } from "../user/user.model";
+import { jwtHelper } from "../../../helpers/jwtHelper";
+import { USER_ROLES } from "../../../enums/user";
+import ApiError from "../../../errors/ApiError";
+import generateOTP from "../../../util/generateOTP";
+import { emailTemplate } from "../../../shared/emailTemplate";
+import { emailHelper } from "../../../helpers/emailHelper";
 
-//login
 const signIn = async ( 
-    payload : SignInData
+    payload : {
+        email: string,
+        password: string
+    }
 ) => {
     const { email, password } = payload;
     const isUser = await User.findOne({email});
     if (!isUser) {
         throw new ApiError(StatusCodes.NOT_FOUND,"Your account is not exist!")
     };
-    if ( isUser.status === 'delete') {
+    if ( isUser.status === "DELETE" ) {
         throw new ApiError(StatusCodes.FORBIDDEN,`Your account was ${isUser.status.toLowerCase()}!`)
     };
 
-    const isTrue = await bcryptjs.compare(password, isUser.password);
-    if (!isTrue) {
-        throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"You passwort was wrong!")
+    const isPassword = User.isMatchPassword(password,isUser.password)
+
+    if (
+        !isPassword
+    ) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, 'Password is incorrect!');
     };
 
-    const token = jwtHelper.createToken();
-    const { password: _password, ...userWithoutPassword } = isUser.toObject();
-    
-    await isUser.save();
+    const token = jwtHelper.createToken({role: USER_ROLES.USER,userID: isUser._id.toString()});
 
-    return { token, user: userWithoutPassword }
+    return { token, user: {
+        name: isUser.name,
+        email: isUser.email,
+        profile: isUser.profile,
+        role: isUser.role,
+        contact: isUser.contact,
+        status: isUser.status
+    } }
 }
 
-//forget password
-const forgetPasswordToDB = async (email: string) => {
-  const isExistUser = await User.isExistUserByEmail(email);
-  if (!isExistUser) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
-  }
+const emailSend = async (
+    payload : { email: string, verificationType: "FORMAT_PASSWORD" | "CHANGE_PASSWORD" | "ACCOUNT_VERIFICATION" }
+) => {
+    const { email } = payload;
+    const isUser = await User.findOne({email});
+    if (!isUser) {
+        throw new ApiError(StatusCodes.NOT_FOUND,`No account exists with this ( ${email} ) email`)
+    };
 
-  //send mail
-  const otp = generateOTP();
-  const value = {
-    otp,
-    email: isExistUser.email,
-  };
-  const forgetPassword = emailTemplate.resetPassword(value);
-  emailHelper.sendEmail(forgetPassword);
+    if ( isUser.status === "DELETE" ) {
+        throw new ApiError(StatusCodes.FORBIDDEN,`Your account was ${isUser.status.toLowerCase()}!`)
+    };
+    
+    // generate otp
+    const otp = generateOTP();
 
-  //save to DB
-  const authentication = {
-    oneTimeCode: otp,
-    expireAt: new Date(Date.now() + 3 * 60000),
-  };
-  await User.findOneAndUpdate({ email }, { $set: { authentication } });
-};
+    //Send Mail
+    const forgetPassword = emailTemplate.sendMail({otp, email,name: isUser.name, subjet: payload.verificationType});
+    emailHelper.sendEmail(forgetPassword);
 
-//verify otp
+    await User.updateOne(
+        { email },
+        {
+          $set: {
+            'otpVerification.otp': otp,
+            'otpVerification.time': new Date(Date.now() + 3 * 60000),
+            'otpVerification.verificationType': payload.verificationType,
+          },
+        }
+    );
+      
+    return true
+}
+
 const verifyOtp = async (
-    payload : { email: string, otp: number }
+    payload : { email: string, otp: string }
 ) => {
     const { email, otp } = payload;
     const isUser = await User.findOne({email});
@@ -77,11 +85,11 @@ const verifyOtp = async (
         throw new ApiError(StatusCodes.NOT_FOUND,`No account exists with this ( ${email} ) email`)
     };
 
-    if ( isUser.status === "delete" ) {
+    if ( isUser.status === "DELETE" ) {
         throw new ApiError(StatusCodes.FORBIDDEN,`Your account was ${isUser.status.toLowerCase()}!`)
     };
 
-    if (otp !== isUser.otpVerification.otp && !isUser.otpVerification.isVerified && isUser.otpVerification.time < new Date( Date.now() )) {
+    if (Number(otp) !== isUser.otpVerification.otp && !isUser.otpVerification.isVerified && isUser.otpVerification.time < new Date( Date.now() )) {
         throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Your otp verification in not acceptable for this moment!")
     };
 
@@ -104,112 +112,69 @@ const verifyOtp = async (
     return true;
 }
 
-//forget password
-const resetPasswordToDB = async (
-  token: string,
-  payload: IAuthResetPassword
+const changePassword = async (
+    payload : {
+        email: string, 
+        currentPassword: string, 
+        password: string, 
+        confirmPassword: string, 
+        oparationType: string
+    }
 ) => {
-  const { newPassword, confirmPassword } = payload;
-  //isExist token
-  const isExistToken = await ResetToken.isExistToken(token);
-  if (!isExistToken) {
-    throw new ApiError(StatusCodes.UNAUTHORIZED, 'You are not authorized');
-  }
+    const { email, currentPassword, password, confirmPassword, oparationType } = payload;
+    const isUser = await User.findOne({email});
+    if (!isUser) {
+        throw new ApiError(StatusCodes.NOT_FOUND,`No account exists with this ( ${email} ) email`)
+    };
+    if ( isUser.status === "DELETE" ) {
+        throw new ApiError(StatusCodes.FORBIDDEN,`Your account was ${isUser.status.toLowerCase()}!`)
+    };
+    if ( !isUser.otpVerification.isVerified.status ) {
+        throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Your verification date is over now you can't change the password!")
+    };
+    
+    if ( isUser.otpVerification.isVerified.time < new Date( Date.now())  ) {
+        throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Your verification date is over now you can't change the password!")
+    };
+    
+    if (password !== confirmPassword) {
+        throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Please check your new password and the confirm password!")
+    };
 
-  //user permission check
-  const isExistUser = await User.findById(isExistToken.user).select(
-    '+authentication'
-  );
-  if (!isExistUser?.authentication?.isResetPassword) {
-    throw new ApiError(
-      StatusCodes.UNAUTHORIZED,
-      "You don't have permission to change the password. Please click again to 'Forgot Password'"
-    );
-  }
+    if ( oparationType === "CHANGE_PASSWORD" ) {
+        
+        const isCurrentPasswordValid = await User.isMatchPassword(currentPassword, isUser.password)
+        if (!isCurrentPasswordValid) {
+            throw new ApiError(StatusCodes.BAD_REQUEST,"You have gived the wrong old password!")
+        };
 
-  //validity check
-  const isValid = await ResetToken.isExpireToken(token);
-  if (!isValid) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Token expired, Please click again to the forget password'
-    );
-  }
+        await User.findByIdAndUpdate(isUser._id, {
+            $set:{
+                password: password,
+                "otpVerification.isVerified.status": false,
+                "otpVerification.isVerified.time": new Date( 0 ),
+            }
+        });
 
-  //check password
-  if (newPassword !== confirmPassword) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      "New password and Confirm password doesn't match!"
-    );
-  }
+    };
 
-  const hashPassword = await bcrypt.hash(
-    newPassword,
-    Number(config.bcrypt_salt_rounds)
-  );
+    if ( oparationType === "FORGET_PASSWORD" ) {
 
-  const updateData = {
-    password: hashPassword,
-    authentication: {
-      isResetPassword: false,
-    },
-  };
+        await User.findByIdAndUpdate(isUser._id, {
+            $set:{
+                password: password,
+                "otpVerification.isVerified.status": false,
+                "otpVerification.isVerified.time": new Date( 0 ),
+            }
+        });
+    };
+      
+    return true;
+} 
 
-  await User.findOneAndUpdate({ _id: isExistToken.user }, updateData, {
-    new: true,
-  });
-};
-
-const changePasswordToDB = async (
-  user: JwtPayload,
-  payload: IChangePassword
-) => {
-  const { currentPassword, newPassword, confirmPassword } = payload;
-  const isExistUser = await User.findById(user.id).select('+password');
-  if (!isExistUser) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
-  }
-
-  //current password match
-  if (
-    currentPassword &&
-    !(await User.isMatchPassword(currentPassword, isExistUser.password))
-  ) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Password is incorrect');
-  }
-
-  //newPassword and current password
-  if (currentPassword === newPassword) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Please give different password from current password'
-    );
-  }
-  //new password and confirm password check
-  if (newPassword !== confirmPassword) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      "Password and Confirm password doesn't matched"
-    );
-  }
-
-  //hash password
-  const hashPassword = await bcrypt.hash(
-    newPassword,
-    Number(config.bcrypt_salt_rounds)
-  );
-
-  const updateData = {
-    password: hashPassword,
-  };
-  await User.findOneAndUpdate({ _id: user.id }, updateData, { new: true });
-};
-
-export const AuthService = {
-  verifyOtp,
-  signIn,
-  forgetPasswordToDB,
-  resetPasswordToDB,
-  changePasswordToDB,
-};
+export const AuthServices = {
+    signIn,
+    emailSend,
+    verifyOtp,
+    changePassword
+}

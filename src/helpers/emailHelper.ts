@@ -1,22 +1,22 @@
 import nodemailer from 'nodemailer';
-import config from '../config';
 import { errorLogger, logger } from '../shared/logger';
 import { ISendEmail } from '../types/email';
+import config from '../config';
 
 const transporter = nodemailer.createTransport({
-  host: config.email.host,
-  port: Number(config.email.port),
+  host: config.nodemailer.email_host,
+  port: Number(config.nodemailer.email_port),
   secure: false,
   auth: {
-    user: config.email.user,
-    pass: config.email.pass,
+    user: config.nodemailer.email_user,
+    pass: config.nodemailer.email_pass,
   },
 });
 
 const sendEmail = async (values: ISendEmail) => {
   try {
     const info = await transporter.sendMail({
-      from: `"Simply Good Food" ${config.email.from}`,
+      from: `"Whisper Wings" ${config.nodemailer.email_from}`,
       to: values.to,
       subject: values.subject,
       html: values.html,

@@ -1,75 +1,85 @@
-import { Request, Response } from 'express';
-import { StatusCodes } from 'http-status-codes';
-import catchAsync from '../../../shared/catchAsync';
-import sendResponse from '../../../shared/sendResponse';
-import { AuthService } from './auth.service';
+import { Request, Response } from "express"
+import catchAsync from "../../../shared/catchAsync";
+import { AuthServices } from "./auth.service";
+import { USER_ROLES } from "../../../enums/user";
+import config from "../../../config";
+import { StatusCodes } from "http-status-codes";
+import sendResponse from "../../../shared/sendResponse";
 
-const verifyEmail = catchAsync(async (req: Request, res: Response) => {
-  const { ...verifyData } = req.body;
-  const result = await AuthService.verifyOtp(verifyData);
+const SignIn = catchAsync(
+    async( req: Request, res: Response ) => {
+        const {...data} = req.body;
+        const result = await AuthServices.signIn(data);
 
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: "Successfully verify the otp authentication",
-    data: result,
-  });
-});
+        if (result.user.role === USER_ROLES.ADMIN) {
+            const expirDate = Number(config.jwt.jwt_expire_in!.split("")[0])
+            return res
+                    .cookie('authorization', result.token, {
+                        httpOnly: true,
+                        secure: config.node_env === 'production',
+                        sameSite: 'strict',
+                        maxAge: expirDate
+                    })
+                    .json({
+                        sucess: true,
+                        statusCode: StatusCodes.OK,
+                        message: "Welcome to deshboard",
+                    })
+        }
+        sendResponse(res, {
+            success: true,
+            statusCode: StatusCodes.OK,
+            message: "User login successfully",
+            data: result
+        })
+    }
+)
 
-const loginUser = catchAsync(async (req: Request, res: Response) => {
-  const { ...loginData } = req.body;
-  const result = await AuthService.signIn(loginData);
+const getOpt = catchAsync(
+    async( req: Request, res: Response ) => {
+        const {...data} = req.body;
+        const result = await AuthServices.emailSend(data);
 
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'User logged in successfully.',
-    data: result,
-  });
-});
+        sendResponse(res, {
+            success: true,
+            statusCode: StatusCodes.OK,
+            message: `An OTP has been sent to ${result.user.email}. Please check your inbox and continue!`,
+            data: result
+        })
+    }
+)
 
-const forgetPassword = catchAsync(async (req: Request, res: Response) => {
-  const email = req.body.email;
-  const result = await AuthService.forgetPasswordToDB(email);
+const verifyOtp = catchAsync(
+    async( req: Request, res: Response ) => {
+        const {...data} = req.body;
+        const result = await AuthServices.verifyOtp(data);
 
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message:
-      'Please check your email. We have sent you a one-time passcode (OTP).',
-    data: result,
-  });
-});
+        sendResponse(res, {
+            success: true,
+            statusCode: StatusCodes.OK,
+            message: "Your OTP is verifyed successfully now you can change your password!",
+            data: result
+        })
+    }
+)
 
-const resetPassword = catchAsync(async (req: Request, res: Response) => {
-  const token = req.headers.authorization;
-  const { ...resetData } = req.body;
-  const result = await AuthService.resetPasswordToDB(token!, resetData);
+const changePassword = catchAsync(
+    async( req: Request, res: Response ) => {
+        const {...data} = req.body;
+        const result = await AuthServices.changePassword(data);
 
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'Your password has been successfully reset.',
-    data: result,
-  });
-});
-
-const changePassword = catchAsync(async (req: Request, res: Response) => {
-  const user = req.user;
-  const { ...passwordData } = req.body;
-  await AuthService.changePasswordToDB(user, passwordData);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'Your password has been successfully changed',
-  });
-});
+        sendResponse(res, {
+            success: true,
+            statusCode: StatusCodes.OK,
+            message: "Your pasword was changed successfully",
+            data: result
+        })
+    }
+)
 
 export const AuthController = {
-  verifyEmail,
-  loginUser,
-  forgetPassword,
-  resetPassword,
-  changePassword,
-};
+    SignIn,
+    getOpt,
+    verifyOtp,
+    changePassword
+}

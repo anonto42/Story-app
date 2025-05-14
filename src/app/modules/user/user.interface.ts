@@ -1,14 +1,15 @@
-import { Model } from 'mongoose';
-import { USER_ROLES, Verification_For } from '../../../enums/user';
+import { Model, Types } from 'mongoose';
+import { USER_ROLES, USER_STSTUS, Verification_For } from '../../../enums/user';
 
 export type IUser = {
   name: string;
   role: USER_ROLES;
+  subscription: Types.ObjectId
   contact: string;
   email: string;
   password: string;
   location: string; 
-  status: 'active' | 'delete';
+  status: USER_STSTUS.ACTIVE | USER_STSTUS.DELETE;
   verified: boolean;
   profile?: string;
   otpVerification:{
@@ -28,7 +29,5 @@ export type IUser = {
 };
 
 export type UserModal = {
-  isExistUserById(id: string): any;
-  isExistUserByEmail(email: string): any;
   isMatchPassword(password: string, hashPassword: string): boolean;
 } & Model<IUser>;

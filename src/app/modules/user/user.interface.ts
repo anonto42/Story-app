@@ -7,10 +7,10 @@ export type IUser = {
   contact: string;
   email: string;
   password: string;
-  location: string;
-  image?: string;
+  location: string; 
   status: 'active' | 'delete';
   verified: boolean;
+  profile?: string;
   authentication?: {
     isResetPassword: boolean;
     oneTimeCode: number;

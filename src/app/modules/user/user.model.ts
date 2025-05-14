@@ -23,13 +23,17 @@ const userSchema = new Schema<IUser, UserModal>(
       unique: true,
       lowercase: true,
     },
+    contact:{
+      type: String,
+      unique: true
+    },
     password: {
       type: String,
       required: true,
       select: 0,
       minlength: 8,
     },
-    image: {
+    profile: {
       type: String,
       default: 'https://i.ibb.co/z5YHLV9/profile.png',
     },

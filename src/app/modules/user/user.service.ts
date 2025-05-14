@@ -7,44 +7,38 @@ import { emailTemplate } from '../../../shared/emailTemplate';
 import unlinkFile from '../../../shared/unlinkFile';
 import generateOTP from '../../../util/generateOTP';
 import { IUser } from './user.interface';
-import { User } from './user.model';
+import { User } from './user.model'; 
+import { jwtHelper } from '../../../helpers/jwtHelper';
+import config from '../../../config';
 
-const createUserToDB = async (payload: Partial<IUser>): Promise<IUser> => {
-  //set role
-  payload.role = USER_ROLES.USER;
-  const createUser = await User.create(payload);
-  if (!createUser) {
+const createUserToDB = async (payload: Partial<IUser>) => {
+
+  const userData = {
+    name: payload.name,
+    role: USER_ROLES.USER,
+    contact: payload.contact,
+    email: payload.email,
+    password: payload.password,
+    location: payload.location, 
+    status: 'active'
+  }
+  
+  const createUser = await User.create(userData);
+  if (!createUser) { 
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user');
   }
 
-  //send email
-  const otp = generateOTP();
-  const values = {
-    name: createUser.name,
-    otp: otp,
-    email: createUser.email!,
-  };
-  const createAccountTemplate = emailTemplate.createAccount(values);
-  emailHelper.sendEmail(createAccountTemplate);
+  const Token = jwtHelper.createToken({userID: createUser._id,role: "USER"},config.jwt.jwt_secret!,config.jwt.jwt_expire_in!)
 
-  //save to DB
-  const authentication = {
-    oneTimeCode: otp,
-    expireAt: new Date(Date.now() + 3 * 60000),
-  };
-  await User.findOneAndUpdate(
-    { _id: createUser._id },
-    { $set: { authentication } }
-  );
-
-  return createUser;
+  return {createUser,Token}
 };
 
 const getUserProfileFromDB = async (
   user: JwtPayload
 ): Promise<Partial<IUser>> => {
-  const { id } = user;
-  const isExistUser = await User.isExistUserById(id);
+  console.log(user)
+  const { userID } = user;
+  const isExistUser = await User.isExistUserById(userID);
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
@@ -56,18 +50,18 @@ const updateProfileToDB = async (
   user: JwtPayload,
   payload: Partial<IUser>
 ): Promise<Partial<IUser | null>> => {
-  const { id } = user;
-  const isExistUser = await User.isExistUserById(id);
+  const { userID } = user;
+  const isExistUser = await User.isExistUserById(userID);
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
 
   //unlink file here
-  if (payload.image) {
-    unlinkFile(isExistUser.image);
+  if (payload.profile) {
+    unlinkFile(isExistUser.profile);
   }
 
-  const updateDoc = await User.findOneAndUpdate({ _id: id }, payload, {
+  const updateDoc = await User.findOneAndUpdate({ _id: userID }, payload, {
     new: true,
   });
 

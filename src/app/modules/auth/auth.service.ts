@@ -208,7 +208,7 @@ const changePasswordToDB = async (
 
 export const AuthService = {
   verifyOtp,
-  loginUserFromDB,
+  signIn,
   forgetPasswordToDB,
   resetPasswordToDB,
   changePasswordToDB,

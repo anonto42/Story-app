@@ -73,7 +73,7 @@ const emailSend = async (
         }
     );
       
-    return true
+    return { user:{ email: isUser.email } }
 }
 
 const verifyOtp = async (

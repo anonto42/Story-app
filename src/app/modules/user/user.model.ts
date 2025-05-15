@@ -37,7 +37,7 @@ const userSchema = new Schema<IUser, UserModal>(
     },
     status: {
       type: String,
-      enum: [USER_STSTUS.ACTIVE,USER_STSTUS.DELETE],
+      enum: [USER_STSTUS.ACTIVE,USER_STSTUS.BLOCK],
       default: USER_STSTUS.ACTIVE,
     },
     accountType:{
@@ -118,7 +118,7 @@ userSchema.statics.isUserExist = async ( payload: object ): Promise<IUser> => {
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND,"User not exist!")
   };
-  if ( user.status === "DELETE" ) {
+  if ( user.status === "BLOCK" ) {
     throw new ApiError(StatusCodes.FORBIDDEN,`Your account was ${user.status.toLowerCase()}!`)
   };
   return user

@@ -12,6 +12,22 @@ const postUpload = z.object({
     })
 })
 
+
+const createSubZodModel = z.object({
+    body: z.object({
+        title: z.string({required_error: "You must give the title of the post"})
+    })
+})
+
+const updateSchemaZod = z.object({
+    body: z.object({
+        title: z.string({required_error: "You must give the title of the post"})
+    })
+})
+
+
 export const AdminValidaton = {
-    postUpload
+    postUpload,
+    createSubZodModel,
+    updateSchemaZod
 }

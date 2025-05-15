@@ -28,6 +28,38 @@ router
         AdminController.deletePost
     )
 
+router
+    .route("/subscription")
+    .get(
+        auth( USER_ROLES.ADMIN ),
+        AdminController.subScriptions
+    )
+    .post(
+        auth( USER_ROLES.ADMIN ),
+        validateRequest( AdminValidaton.createSubZodModel ),
+        AdminController.createScriptions
+    )
+    .put(
+        auth( USER_ROLES.ADMIN ),
+        validateRequest( AdminValidaton.updateSchemaZod ),
+        AdminController.editeScriptions
+    )
+
+router
+    .route("/users")
+    .get(
+        auth( USER_ROLES.ADMIN ),
+        AdminController.getUser
+    )
+    .patch(
+        auth( USER_ROLES.ADMIN ),
+        AdminController.blockUser
+    )
+    .delete(
+        auth( USER_ROLES.ADMIN ),
+        AdminController.deletetUser
+    )
+
 
 
 export const AdminRouter = router;

@@ -1,10 +1,13 @@
 import { JwtPayload } from "jsonwebtoken"
 import { User } from "../user/user.model"
-import { story } from "./input.types"
+import { story, Subscription as typeOfSub } from "./input.types"
 import { Post } from "../post/post.model"
 import ApiError from "../../../errors/ApiError"
 import { StatusCodes } from "http-status-codes"
 import { Request } from "express"
+import unlinkFile from "../../../shared/unlinkFile"
+import { Subscription } from "../subscription/subscription.model"
+import { USER_STSTUS } from "../../../enums/user"
 
 //Have to make some overview aggrigation for this
 const OverView = async (
@@ -13,38 +16,6 @@ const OverView = async (
     const admin = await User.isUserExist({_id: payload.userID})
 
     return admin
-}
-
-const uploadPost = async (
-    payload: JwtPayload,
-    data: story,
-    {
-        image,
-        video
-    }:{
-        image: string,
-        video: string
-    }
-) => {
-    const admin = await User.isUserExist({_id: payload.userID});
-
-    const file = {
-        type: data.type,
-        title: data.title,
-        duration: data.duration,
-        description: data.description,
-        media: data.mainFile,
-        coverPhoto: data.coverPhoto,
-        category: data.category,
-        createdBy: admin._id
-    }
-console.log("This log is from the files -> "+file)
-    const createdPost = await Post.create(file);
-    if (!createdPost) {
-        throw new ApiError(StatusCodes.EXPECTATION_FAILED,"Somting was wrong on the post creation")
-    };
-
-    return createdPost
 }
 
 const doAPost = async (
@@ -98,17 +69,95 @@ const deleteApost = async (
     if (!postId) {
         throw new ApiError(StatusCodes.BAD_REQUEST,"You must give the post id to delete the post")
     };
-    const postDelete = await User.findByIdAndDelete(postId);
+    const postDelete = await Post.findById(postId);
     if (!postDelete) {
-        throw new ApiError(StatusCodes.NOT_FOUND,"You must give the ")
+        throw new ApiError(StatusCodes.NOT_FOUND,"Post dosn't exist!")
     };
+
+    unlinkFile(postDelete.countryFlag!);
+    unlinkFile(postDelete.mainFile!);    
+    unlinkFile(postDelete.coverPhoto!);
 
     return true;
 }
 
+const getAllSubscriptions = async ( payload: JwtPayload) => {
+    await User.isUserExist(payload.userID)
+    return await Subscription.find()
+        .populate('userID', 'name')
+        .sort({ createdAt: -1 })
+        .lean();
+};
+
+const ASubscription = async ( payload: JwtPayload, id: string ) => {
+    await User.isUserExist({_id: payload.userID });
+
+      const subscription = await Subscription.findById(id)
+        .populate('userID', 'name email') // Full user info (adjust fields as needed)
+        .populate('subscriptionPlanId') // Full plan info
+        .lean();
+
+    return subscription
+}
+
+const createSubscription = async (
+    payload: JwtPayload,
+    data: typeOfSub
+) => {
+    const Admin = await User.isUserExist({_id: payload._id});
+
+}
+
+const updateSubscription = async (
+    payload: JwtPayload,
+    data: typeOfSub
+) => {
+    const Admin = await User.isUserExist({_id: payload._id});
+
+}
+
+const allUsers = async (paylaod: JwtPayload) => {
+    await User.isUserExist({_id: paylaod._id})
+
+    return User.find().select("-password")
+}
+
+const AUser = async (paylaod: JwtPayload, id: string) => {
+    await User.isUserExist({_id: paylaod._id})
+    return User.isUserExist({_id: id})
+}
+
+const deleteUser = async (payload: JwtPayload, id: string) => {
+    await User.isUserExist({_id: payload._id})
+
+    const user = await User.findByIdAndDelete(id).select("-password");
+    if (!user) {
+        throw new ApiError(StatusCodes.NOT_FOUND,"User not founded!")
+    }
+    return user
+}
+
+const blockUser = async (payload: JwtPayload, id: string) => {
+    await User.isUserExist({_id: payload._id})
+
+    const user = await User.findOneAndUpdate({_id: id},{ status: USER_STSTUS.BLOCK }).select("-password");
+    if (!user) {
+        throw new ApiError(StatusCodes.NOT_FOUND,"User not founded!")
+    }
+    return user
+}
+
+
 export const AdminService = {
     OverView,
-    uploadPost,
     doAPost,
-    deleteApost
+    deleteApost,
+    getAllSubscriptions,
+    ASubscription,
+    createSubscription,
+    updateSubscription,
+    allUsers,
+    AUser,
+    deleteUser,
+    blockUser
 }

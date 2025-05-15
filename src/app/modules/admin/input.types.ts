@@ -13,3 +13,7 @@ export type story = {
     mainFile: string;
     countryFlag: string;
 }
+
+export type Subscription = {
+    
+}

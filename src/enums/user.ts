@@ -11,7 +11,7 @@ export enum Verification_For {
 
 export enum USER_STSTUS {
   ACTIVE = "ACTIVE",
-  DELETE = "DELETE"
+  BLOCK = "BLOCK"
 }
 
 export enum ACCOUNT_TYPE {

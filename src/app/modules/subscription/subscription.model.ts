@@ -1,62 +1,40 @@
 import { model, Schema } from 'mongoose';
-import { USER_ROLES } from '../../../enums/user';
-import { IUser, UserModal } from './user.interface';
+import { ISubscription } from './subscription.interface';
+import { SUBSCRIPTION_STATUS, SUBSCRIPTION_TYPE } from '../../../enums/subscription';
 
-const userSchema = new Schema<IUser, UserModal>(
+const subscriptionSchema = new Schema<ISubscription>(
   {
-    name: {
+    type: {
       type: String,
-      required: true,
+      enum: SUBSCRIPTION_TYPE
     },
-    role: {
-      type: String,
-      enum: Object.values(USER_ROLES),
-      required: true,
+    userID: {
+      type: Schema.Types.ObjectId,
+      ref: "users"
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
+    subscriptionPlanId: {
+      type: Schema.Types.ObjectId,
+      ref: "subscription"
     },
-    password: {
-      type: String,
-      required: true,
-      select: 0,
-      minlength: 8,
+    packageName: {
+      type: String
     },
-    image: {
-      type: String,
-      default: 'https://i.ibb.co/z5YHLV9/profile.png',
+    packagePrice: {
+      type: Number
+    },
+    date: {
+      type: Date
     },
     status: {
       type: String,
-      enum: ['active', 'delete'],
-      default: 'active',
+      enum: SUBSCRIPTION_STATUS
     },
-    verified: {
-      type: Boolean,
-      default: false,
-    },
-    authentication: {
-      type: {
-        isResetPassword: {
-          type: Boolean,
-          default: false,
-        },
-        oneTimeCode: {
-          type: Number,
-          default: null,
-        },
-        expireAt: {
-          type: Date,
-          default: null,
-        },
-      },
-      select: 0,
-    },
+    condition: {
+      type: String,
+      min: 30
+    }
   },
   { timestamps: true }
 );
 
-export const User = model<IUser, UserModal>('User', userSchema);
+export const Subscription = model<ISubscription>('subscription', subscriptionSchema);

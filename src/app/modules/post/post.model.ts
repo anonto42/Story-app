@@ -1,12 +1,12 @@
 import { model, Schema } from 'mongoose';
 import { IPost } from './post.interface';
-import { POST_TYPE } from '../../../enums/post';
 
 const postSchema = new Schema<IPost>(
   {
     type: {
         type: String,
-        enum: POST_TYPE
+        trim: true,
+        enum: ["MUSIC", "STORY"]
     },
     category: {
         type: String,
@@ -25,7 +25,7 @@ const postSchema = new Schema<IPost>(
         required: true
     },
     duration: {
-        type: Number,
+        type: String,
         required: true
     },
     description: {

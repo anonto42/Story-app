@@ -30,8 +30,8 @@ const fileUploadHandler = () => {
         case 'media':
           uploadDir = path.join(baseUploadDir, 'media');
           break;
-        case 'doc':
-          uploadDir = path.join(baseUploadDir, 'doc');
+        case 'flage':
+          uploadDir = path.join(baseUploadDir, 'image');
           break;
         default:
           throw new ApiError(StatusCodes.BAD_REQUEST, 'File is not supported');
@@ -81,11 +81,20 @@ const fileUploadHandler = () => {
           )
         );
       }
-    } else if (file.fieldname === 'doc') {
-      if (file.mimetype === 'application/pdf') {
+    } else if (file.fieldname === 'flage') {
+      if (
+        file.mimetype === 'image/jpeg' ||
+        file.mimetype === 'image/png' ||
+        file.mimetype === 'image/jpg'
+      ) {
         cb(null, true);
       } else {
-        cb(new ApiError(StatusCodes.BAD_REQUEST, 'Only pdf supported'));
+        cb(
+          new ApiError(
+            StatusCodes.BAD_REQUEST,
+            'Only .jpeg, .png, .jpg file supported'
+          )
+        );
       }
     } else {
       cb(new ApiError(StatusCodes.BAD_REQUEST, 'This file is not supported'));
@@ -96,9 +105,9 @@ const fileUploadHandler = () => {
     storage: storage,
     fileFilter: filterFilter,
   }).fields([
-    { name: 'image', maxCount: 3 },
-    { name: 'media', maxCount: 3 },
-    { name: 'doc', maxCount: 3 },
+    { name: 'image', maxCount: 1 },
+    { name: 'media', maxCount: 1 },
+    { name: 'flage', maxCount: 1 },
   ]);
   return upload;
 };

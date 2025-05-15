@@ -42,8 +42,13 @@ const userSchema = new Schema<IUser, UserModal>(
       default: USER_STSTUS.ACTIVE,
     },
     subscription: {
-      type: Schema.Types.ObjectId,
-      ref:""
+      isSubscriped: {
+        type: Boolean,
+        default: false
+      },
+      expireAT: {
+        type: Date
+      }
     },
     lastActive:{
       type: Date,

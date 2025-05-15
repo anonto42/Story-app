@@ -5,7 +5,10 @@ export interface IUser extends Document {
   _id: Types.ObjectId;
   name: string;
   role: USER_ROLES;
-  subscription: Types.ObjectId
+  subscription: {
+    isSubscriped: boolean;
+    expireAT: Date;
+  };
   contact: string;
   email: string;
   password: string;

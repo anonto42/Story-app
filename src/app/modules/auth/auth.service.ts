@@ -24,7 +24,7 @@ const signIn = async (
         throw new ApiError(StatusCodes.BAD_REQUEST, 'Password is incorrect!');
     };
 
-    const token = jwtHelper.createToken({role: USER_ROLES.USER,userID: isUser._id.toString()});
+    const token = jwtHelper.createToken({role: isUser.role,userID: isUser._id.toString()});
 
     return { token, user: {
         name: isUser.name,

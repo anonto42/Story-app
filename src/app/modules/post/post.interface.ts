@@ -6,7 +6,7 @@ export interface IPost extends Document {
     title: string;
     mentorName: string;
     targetedAge: number;
-    storyTime: number;
+    duration: number;
     description: string;
     coverPhoto: string;
     mainFile: string;

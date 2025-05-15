@@ -7,7 +7,7 @@ export type story = {
     mentorName: string;
     category: string;
     targetedAge: number;
-    storyTime: number;
+    duration: number;
     description: string;
     coverPhoto: string;
     mainFile: string;

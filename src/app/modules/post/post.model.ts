@@ -24,7 +24,7 @@ const postSchema = new Schema<IPost>(
         type: Number,
         required: true
     },
-    storyTime: {
+    duration: {
         type: Number,
         required: true
     },

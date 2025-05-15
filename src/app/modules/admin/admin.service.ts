@@ -4,7 +4,6 @@ import { story } from "./input.types"
 import { Post } from "../post/post.model"
 import ApiError from "../../../errors/ApiError"
 import { StatusCodes } from "http-status-codes"
-import { getSingleFilePath } from "../../../shared/getFilePath"
 import { Request } from "express"
 
 //Have to make some overview aggrigation for this
@@ -48,7 +47,15 @@ console.log("This log is from the files -> "+file)
     return createdPost
 }
 
-const doAPost = async (req: Request, user: any,{countryFlagPath,coverPhotoPath,mainFilePath}:any) => {
+const doAPost = async (
+    req: Request, 
+    user: any,
+    {
+        countryFlagPath,
+        coverPhotoPath,
+        mainFilePath
+    }:any
+) => {
   const {
     type,
     category,
@@ -83,9 +90,25 @@ const doAPost = async (req: Request, user: any,{countryFlagPath,coverPhotoPath,m
   return post;
 };
 
+const deleteApost = async (
+    payload: JwtPayload,
+    postId: string
+) => {
+    await User.isUserExist({_id: payload});
+    if (!postId) {
+        throw new ApiError(StatusCodes.BAD_REQUEST,"You must give the post id to delete the post")
+    };
+    const postDelete = await User.findByIdAndDelete(postId);
+    if (!postDelete) {
+        throw new ApiError(StatusCodes.NOT_FOUND,"You must give the ")
+    };
+
+    return true;
+}
 
 export const AdminService = {
     OverView,
     uploadPost,
-    doAPost
+    doAPost,
+    deleteApost
 }

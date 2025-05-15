@@ -20,9 +20,13 @@ router
     .route("/post")
     .post(
         auth(USER_ROLES.ADMIN),
-        fileUploadHandler(), // multer middleware
+        fileUploadHandler(),
         AdminController.makeAPost
-    );
+    )
+    .delete(
+        auth( USER_ROLES.ADMIN ),
+        AdminController.deletePost
+    )
 
 
 

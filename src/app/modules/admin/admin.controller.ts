@@ -21,30 +21,6 @@ const OverView = catchAsync(
   }
 );
 
-const createPost = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user;
-    const countryFlag = getSingleFilePath(req.files,"image")
-    // const coverPhoto = getSingleFilePath(req.files,"image")
-    const mainFile = getSingleFilePath(req.files,"media")
-
-    // const data = {
-    //   mainFile,
-    //   coverPhoto,
-    //   countryFlag,
-    //   ...req.body
-    // }
-    const result = await AdminService.uploadPost(user,req.body,{image: countryFlag!, video: mainFile!});
-
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: 'Successfully get deshboard overview data',
-      data: result,
-    });
-  }
-);
-
 const makeAPost = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
@@ -64,10 +40,24 @@ const makeAPost = catchAsync(
   }
 );
 
+const deletePost = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const postID = req.query.id
+    const result = await AdminService.deleteApost(user,postID as string);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Post deleted successfully!',
+      data: result,
+    });
+  }
+);
 
 
 export const AdminController = {
   OverView,
-  createPost,
-  makeAPost
+  makeAPost,
+  deletePost
 }

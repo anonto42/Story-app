@@ -13,3 +13,8 @@ export enum USER_STSTUS {
   ACTIVE = "ACTIVE",
   DELETE = "DELETE"
 }
+
+export enum ACCOUNT_TYPE {
+  REGULAR = 'REGULAR',
+  STUDENT = 'STUDENT'
+}

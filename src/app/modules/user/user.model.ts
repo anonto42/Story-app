@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import { model, Schema } from 'mongoose';
 import config from '../../../config';
-import { USER_ROLES, USER_STSTUS, Verification_For } from '../../../enums/user';
+import { ACCOUNT_TYPE, USER_ROLES, USER_STSTUS, Verification_For } from '../../../enums/user';
 import ApiError from '../../../errors/ApiError';
 import { IUser, UserModal } from './user.interface';
 
@@ -24,8 +24,7 @@ const userSchema = new Schema<IUser, UserModal>(
       lowercase: true,
     },
     contact:{
-      type: String,
-      unique: true
+      type: String
     },
     password: {
       type: String,
@@ -41,6 +40,14 @@ const userSchema = new Schema<IUser, UserModal>(
       enum: [USER_STSTUS.ACTIVE,USER_STSTUS.DELETE],
       default: USER_STSTUS.ACTIVE,
     },
+    accountType:{
+      type: String,
+      enum: ACCOUNT_TYPE,
+      default: ACCOUNT_TYPE.REGULAR
+    },
+    location:{
+      type: String
+    },
     subscription: {
       isSubscriped: {
         type: Boolean,
@@ -48,11 +55,24 @@ const userSchema = new Schema<IUser, UserModal>(
       },
       expireAT: {
         type: Date
-      }
+      },
+      limite: Number,
+      enrolled: [{
+        type: Schema.Types.ObjectId,
+      }]
     },
     lastActive:{
       type: Date,
       default: new Date( Date.now() )
+    },
+    freeVideo:{
+      isAvailable: {
+        type:Boolean,
+        default: false
+      },
+      lastWatchedAt:{
+        type: Date
+      }
     },
     otpVerification:{
       isVerified: {

@@ -1,13 +1,21 @@
 import { Document, Model, Types } from 'mongoose';
-import { USER_ROLES, USER_STSTUS, Verification_For } from '../../../enums/user';
+import { ACCOUNT_TYPE, USER_ROLES, USER_STSTUS, Verification_For } from '../../../enums/user';
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
+  requestedAccountType: "REGULAR" | "STUDENT"
   name: string;
   role: USER_ROLES;
   subscription: {
+    limite: number;
+    enrolled: Types.ObjectId[];
     isSubscriped: boolean;
     expireAT: Date;
+  };
+  accountType: ACCOUNT_TYPE;
+  freeVideo:{
+    isAvailable: boolean;
+    lastWatchedAt?: Date;
   };
   contact: string;
   email: string;
@@ -15,7 +23,7 @@ export interface IUser extends Document {
   location: string; 
   status: USER_STSTUS.ACTIVE | USER_STSTUS.DELETE;
   verified: boolean;
-  profile?: string;
+  profile: string;
   lastActive: Date;
   otpVerification:{
     isVerified: {

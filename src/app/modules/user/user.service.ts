@@ -1,13 +1,22 @@
 import { StatusCodes } from 'http-status-codes';
 import { JwtPayload } from 'jsonwebtoken';
-import { USER_ROLES, USER_STSTUS } from '../../../enums/user';
+import { ACCOUNT_TYPE, USER_ROLES, USER_STSTUS } from '../../../enums/user';
 import ApiError from '../../../errors/ApiError';
 import unlinkFile from '../../../shared/unlinkFile';
 import { IUser } from './user.interface';
 import { User } from './user.model'; 
 import { jwtHelper } from '../../../helpers/jwtHelper';
+import { eduEmailRegex } from '../../../regex/user';
 
-const createUserToDB = async (payload: Partial<IUser>) => {
+const createUserToDB = async (payload: Partial<IUser> ) => {
+  let isEdu = false;
+
+  if (payload.requestedAccountType === ACCOUNT_TYPE.STUDENT) {
+    isEdu = eduEmailRegex.test(payload.email as string)
+    if (!isEdu) {
+      throw new ApiError(StatusCodes.BAD_REQUEST,"Your email account is not a educational email account so you can't create the student account")
+    }
+  }
 
   const userData = {
     name: payload.name,
@@ -16,7 +25,8 @@ const createUserToDB = async (payload: Partial<IUser>) => {
     email: payload.email,
     password: payload.password,
     location: payload.location, 
-    status: USER_STSTUS.ACTIVE
+    status: USER_STSTUS.ACTIVE,
+    accountType: isEdu? ACCOUNT_TYPE.STUDENT : ACCOUNT_TYPE.REGULAR
   }
   
   const createUser = await User.create(userData);
@@ -26,15 +36,20 @@ const createUserToDB = async (payload: Partial<IUser>) => {
 
   const Token = jwtHelper.createToken({userID: createUser._id.toString(),role: USER_ROLES.USER})
 
-  return {createUser,Token}
+  return {user:{
+    name: createUser.name,
+    email: createUser.email,
+    contact: createUser.contact,
+    profile: createUser.profile,
+    location: createUser.location
+  },Token}
 };
 
 const getUserProfileFromDB = async (
   user: JwtPayload
 ): Promise<Partial<IUser>> => {
-  console.log(user)
   const { userID } = user;
-  const isExistUser = await User.findById(userID);
+  const isExistUser = await User.findById(userID).select("-password -accountType -createdAt -updatedAt -lastActive -otpVerification -freeVideo -subscription -__v");
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }

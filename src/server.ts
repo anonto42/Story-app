@@ -19,8 +19,8 @@ async function main() {
     mongoose.connect(config.database_url as string);
     logger.info(colors.green('🚀 Database connected successfully'));
 
-    //Seed Super Admin after database connection is successful
-    // await seedSuperAdmin();
+    // Seed Super Admin after database connection is successful
+    await seedSuperAdmin();
 
     const port =
       typeof config.port === 'number' ? config.port : Number(config.port);

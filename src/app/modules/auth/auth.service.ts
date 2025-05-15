@@ -1,7 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import { User } from "../user/user.model";
 import { jwtHelper } from "../../../helpers/jwtHelper";
-import { USER_ROLES } from "../../../enums/user";
 import ApiError from "../../../errors/ApiError";
 import generateOTP from "../../../util/generateOTP";
 import { emailTemplate } from "../../../shared/emailTemplate";

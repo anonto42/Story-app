@@ -45,6 +45,10 @@ const userSchema = new Schema<IUser, UserModal>(
       type: Schema.Types.ObjectId,
       ref:""
     },
+    lastActive:{
+      type: Date,
+      default: new Date( Date.now() )
+    },
     otpVerification:{
       isVerified: {
         status:{
@@ -78,6 +82,21 @@ userSchema.statics.isMatchPassword = async (
   hashPassword: string
 ): Promise<boolean> => {
   return await bcrypt.compare(password, hashPassword);
+};
+
+userSchema.statics.isUserExist = async ( payload: object ): Promise<IUser> => {
+  const user = await User.findOneAndUpdate(
+    payload,
+    { lastActive: new Date() },
+    { new: true }
+  );
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND,"User not exist!")
+  };
+  if ( user.status === "DELETE" ) {
+    throw new ApiError(StatusCodes.FORBIDDEN,`Your account was ${user.status.toLowerCase()}!`)
+  };
+  return user
 };
 
 userSchema.pre('save', async function (next) {

@@ -14,13 +14,7 @@ const signIn = async (
     }
 ) => {
     const { email, password } = payload;
-    const isUser = await User.findOne({email});
-    if (!isUser) {
-        throw new ApiError(StatusCodes.NOT_FOUND,"Your account is not exist!")
-    };
-    if ( isUser.status === "DELETE" ) {
-        throw new ApiError(StatusCodes.FORBIDDEN,`Your account was ${isUser.status.toLowerCase()}!`)
-    };
+    const isUser = await User.isUserExist({email});
 
     const isPassword = User.isMatchPassword(password,isUser.password)
 
@@ -46,14 +40,7 @@ const emailSend = async (
     payload : { email: string, verificationType: "FORMAT_PASSWORD" | "CHANGE_PASSWORD" | "ACCOUNT_VERIFICATION" }
 ) => {
     const { email } = payload;
-    const isUser = await User.findOne({email});
-    if (!isUser) {
-        throw new ApiError(StatusCodes.NOT_FOUND,`No account exists with this ( ${email} ) email`)
-    };
-
-    if ( isUser.status === "DELETE" ) {
-        throw new ApiError(StatusCodes.FORBIDDEN,`Your account was ${isUser.status.toLowerCase()}!`)
-    };
+    const isUser = await User.isUserExist({email});
     
     // generate otp
     const otp = generateOTP();
@@ -80,14 +67,7 @@ const verifyOtp = async (
     payload : { email: string, otp: string }
 ) => {
     const { email, otp } = payload;
-    const isUser = await User.findOne({email});
-    if (!isUser) {
-        throw new ApiError(StatusCodes.NOT_FOUND,`No account exists with this ( ${email} ) email`)
-    };
-
-    if ( isUser.status === "DELETE" ) {
-        throw new ApiError(StatusCodes.FORBIDDEN,`Your account was ${isUser.status.toLowerCase()}!`)
-    };
+    const isUser = await User.isUserExist({email});
 
     if (Number(otp) !== isUser.otpVerification.otp && !isUser.otpVerification.isVerified && isUser.otpVerification.time < new Date( Date.now() )) {
         throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Your otp verification in not acceptable for this moment!")
@@ -122,13 +102,8 @@ const changePassword = async (
     }
 ) => {
     const { email, currentPassword, password, confirmPassword, oparationType } = payload;
-    const isUser = await User.findOne({email});
-    if (!isUser) {
-        throw new ApiError(StatusCodes.NOT_FOUND,`No account exists with this ( ${email} ) email`)
-    };
-    if ( isUser.status === "DELETE" ) {
-        throw new ApiError(StatusCodes.FORBIDDEN,`Your account was ${isUser.status.toLowerCase()}!`)
-    };
+    const isUser = await User.isUserExist({email});
+
     if ( !isUser.otpVerification.isVerified.status ) {
         throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Your verification date is over now you can't change the password!")
     };

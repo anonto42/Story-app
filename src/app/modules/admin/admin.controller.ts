@@ -163,6 +163,34 @@ const blockUser = catchAsync(
   }
 );
 
+const privacyUpdate = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const { ...data } = req.body;
+    const result = await AdminService.blockUser(user,data)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully updated the privacy and policy',
+      data: result,
+    });
+  }
+);
+
+const conditionUpdate = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const { ...data } = req.body;
+    const result = await AdminService.blockUser(user,data)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully updated the privacy and policy',
+      data: result,
+    });
+  }
+);
+
 
 export const AdminController = {
   OverView,

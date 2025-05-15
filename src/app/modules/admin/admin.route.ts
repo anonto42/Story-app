@@ -60,6 +60,13 @@ router
         AdminController.deletetUser
     )
 
+router
+    .route("/terms")
+    .put(
+        auth(USER_ROLES.ADMIN),
+        
+    )
+
 
 
 export const AdminRouter = router;

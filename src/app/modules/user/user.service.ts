@@ -79,8 +79,32 @@ const updateProfileToDB = async (
   return updateDoc;
 };
 
+const getCondition = async (
+    payload: JwtPayload
+) => {
+  await User.isUserExist({ _id: payload.userID });
+  const condition = await User.findOne({ role: USER_ROLES.ADMIN });
+  if (!condition) {
+    throw new ApiError(StatusCodes.NOT_FOUND,"Condition and condition was not founded!");
+  }
+  return condition.termsConditions || "";
+}
+
+const getPolicy = async (
+    payload: JwtPayload
+) => {
+  await User.isUserExist({ _id: payload.userID });
+  const condition = await User.findOne({ role: USER_ROLES.ADMIN });
+  if (!condition) {
+    throw new ApiError(StatusCodes.NOT_FOUND,"Privacy and policy was not founded!");
+  }
+  return condition.privacyPolicy || "";
+}
+
 export const UserService = {
   createUserToDB,
   getUserProfileFromDB,
   updateProfileToDB,
+  getPolicy,
+  getCondition
 };

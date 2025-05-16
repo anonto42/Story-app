@@ -51,4 +51,36 @@ const updateProfile = catchAsync(
   }
 );
 
-export const UserController = { createUser, getUserProfile, updateProfile };
+const termsAndCondition = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const result = await UserService.getCondition(user)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully get the terms & condition',
+      data: result,
+    });
+  }
+);
+
+const privacyAndPolicy = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const result = await UserService.getPolicy(user)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully get the privacy & policy',
+      data: result,
+    });
+  }
+);
+
+export const UserController = { 
+  createUser, 
+  getUserProfile, 
+  updateProfile,
+  termsAndCondition,
+  privacyAndPolicy
+};

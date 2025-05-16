@@ -23,4 +23,19 @@ router
     UserController.updateProfile
   )
 
+router
+  .route("/policy")
+  .get(
+    auth( USER_ROLES.ADMIN, USER_ROLES.USER ),
+    UserController.privacyAndPolicy
+  )
+
+router
+  .route("/terms")
+  .get(
+    auth( USER_ROLES.ADMIN, USER_ROLES.USER ),
+    UserController.termsAndCondition
+  )
+
+
 export const UserRoutes = router;

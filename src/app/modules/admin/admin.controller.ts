@@ -166,8 +166,8 @@ const blockUser = catchAsync(
 const privacyUpdate = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    const { ...data } = req.body;
-    const result = await AdminService.blockUser(user,data)
+    const { data } = req.body;
+    const result = await AdminService.updatePrivacy(user,data)
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,
@@ -180,12 +180,12 @@ const privacyUpdate = catchAsync(
 const conditionUpdate = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    const { ...data } = req.body;
-    const result = await AdminService.blockUser(user,data)
+    const { data } = req.body;
+    const result = await AdminService.updateCondition(user,data)
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,
-      message: 'Successfully updated the privacy and policy',
+      message: 'Successfully updated the terms & condition',
       data: result,
     });
   }
@@ -201,5 +201,7 @@ export const AdminController = {
   editeScriptions,
   getUser,
   blockUser,
-  deletetUser
+  deletetUser,
+  privacyUpdate,
+  conditionUpdate
 }

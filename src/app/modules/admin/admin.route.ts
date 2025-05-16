@@ -64,7 +64,13 @@ router
     .route("/terms")
     .put(
         auth(USER_ROLES.ADMIN),
-        
+        validateRequest( AdminValidaton.policyZodSchema),
+        AdminController.privacyUpdate
+    )
+    .patch(
+        auth( USER_ROLES.ADMIN ),
+        validateRequest( AdminValidaton.conditionsZodSchema ),
+        AdminController.conditionUpdate
     )
 
 

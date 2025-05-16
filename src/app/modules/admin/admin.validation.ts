@@ -25,9 +25,22 @@ const updateSchemaZod = z.object({
     })
 })
 
+const policyZodSchema = z.object({
+    body: z.object({
+        data: z.string({required_error: "You must give the data of the update the policy"})
+    })
+})
+
+const conditionsZodSchema = z.object({
+    body: z.object({
+        data: z.string({required_error: "You must give the data of the update the terms & conditions"})
+    })
+})
 
 export const AdminValidaton = {
     postUpload,
     createSubZodModel,
-    updateSchemaZod
+    updateSchemaZod,
+    policyZodSchema,
+    conditionsZodSchema
 }

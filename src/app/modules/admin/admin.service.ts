@@ -7,7 +7,7 @@ import { StatusCodes } from "http-status-codes"
 import { Request } from "express"
 import unlinkFile from "../../../shared/unlinkFile"
 import { Subscription } from "../subscription/subscription.model"
-import { USER_STSTUS } from "../../../enums/user"
+import { USER_ROLES, USER_STSTUS } from "../../../enums/user"
 
 //Have to make some overview aggrigation for this
 const OverView = async (
@@ -147,6 +147,40 @@ const blockUser = async (payload: JwtPayload, id: string) => {
     return user
 }
 
+const updatePrivacy = async (
+    payload: JwtPayload,
+    text: string
+) => {
+    await User.isUserExist({ _id: payload.userID });
+
+    const privacy = await User.findOne({ role: USER_ROLES.ADMIN });
+    if (!privacy) {
+        throw new ApiError(StatusCodes.NOT_FOUND,"Admin model not founded for update!");
+    }
+
+    privacy.privacyPolicy = text;
+    await privacy.save();
+
+    return true;
+}
+
+const updateCondition = async (
+    payload: JwtPayload,
+    text: string
+) => {
+    await User.isUserExist({ _id: payload.userID });
+
+    const condition = await User.findOne({ role: USER_ROLES.ADMIN });
+    if (!condition) {
+        throw new ApiError(StatusCodes.NOT_FOUND,"Admin model not founded for update!");
+    }
+
+    condition.termsConditions = text;
+    await condition.save();
+
+    return true;
+}
+
 
 export const AdminService = {
     OverView,
@@ -159,5 +193,7 @@ export const AdminService = {
     allUsers,
     AUser,
     deleteUser,
-    blockUser
+    blockUser,
+    updatePrivacy,
+    updateCondition
 }

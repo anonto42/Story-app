@@ -10,3 +10,8 @@ export enum SUBSCRIPTION_STATUS {
     DEACTIVE = "DEACTIVE"
 }
 
+export enum SUBSCRIPTION_DURATION_TIME {
+    MONTHLY = "MONTHLY",
+    YEARLY = "YEARLY"
+}
+

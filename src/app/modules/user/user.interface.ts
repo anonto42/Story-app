@@ -12,7 +12,7 @@ export interface IUser extends Document {
     isSubscriped: boolean;
     expireAT: Date;
   };
-  accountType: ACCOUNT_TYPE;
+  accountType: string;
   freeVideo:{
     isAvailable: boolean;
     lastWatchedAt?: Date;
@@ -21,7 +21,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   location: string; 
-  status: USER_STSTUS.ACTIVE | USER_STSTUS.DELETE;
+  status: string;
   verified: boolean;
   profile: string;
   lastActive: Date;
@@ -32,10 +32,7 @@ export interface IUser extends Document {
     },
     otp: number,
     time: Date,
-    verificationType:{
-      type: string,
-      enum: Verification_For,
-    }
+    verificationType: string
   },
   privacyPolicy:string,
   termsConditions:string,

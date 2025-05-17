@@ -39,6 +39,7 @@ const doAPost = async (
     language
   } = req.body;
 
+    await User.isUserExist({_id: req.user.userID})
  
   // Validate required files
   if (!coverPhotoPath || !mainFilePath ) {
@@ -67,7 +68,7 @@ const deleteApost = async (
     payload: JwtPayload,
     postId: string
 ) => {
-    await User.isUserExist({_id: payload});
+    await User.isUserExist({_id: payload.userID});
     if (!postId) {
         throw new ApiError(StatusCodes.BAD_REQUEST,"You must give the post id to delete the post")
     };
@@ -101,6 +102,7 @@ const ASubscription = async ( payload: JwtPayload, id: string ) => {
 
     return subscription
 }
+
 const getAllPlans = async ( payload: JwtPayload) => {
     await User.isUserExist({_id: payload.userID})
     return await Subscription.find({type: SUBSCRIPTION_TYPE.SUBSCRIPTION_PLAN})
@@ -144,18 +146,18 @@ const updateSubscription = async (
 }
 
 const allUsers = async (paylaod: JwtPayload) => {
-    await User.isUserExist({_id: paylaod._id})
+    await User.isUserExist({_id: paylaod.userID })
 
     return User.find().select("-password")
 }
 
 const AUser = async (paylaod: JwtPayload, id: string) => {
-    await User.isUserExist({_id: paylaod._id})
+    await User.isUserExist({_id: paylaod.userID})
     return User.isUserExist({_id: id})
 }
 
 const deleteUser = async (payload: JwtPayload, id: string) => {
-    await User.isUserExist({_id: payload._id})
+    await User.isUserExist({_id: payload.userID})
 
     const user = await User.findByIdAndDelete(id).select("-password");
     if (!user) {
@@ -165,7 +167,7 @@ const deleteUser = async (payload: JwtPayload, id: string) => {
 }
 
 const blockUser = async (payload: JwtPayload, id: string) => {
-    await User.isUserExist({_id: payload._id})
+    await User.isUserExist({_id: payload.userID})
 
     const user = await User.findOneAndUpdate({_id: id},{ status: USER_STSTUS.BLOCK }).select("-password");
     if (!user) {
@@ -178,9 +180,8 @@ const updatePrivacy = async (
     payload: JwtPayload,
     text: string
 ) => {
-    await User.isUserExist({ _id: payload.userID });
+    const privacy = await User.isUserExist({ _id: payload.userID });
 
-    const privacy = await User.findOne({ role: USER_ROLES.ADMIN });
     if (!privacy) {
         throw new ApiError(StatusCodes.NOT_FOUND,"Admin model not founded for update!");
     }
@@ -195,9 +196,8 @@ const updateCondition = async (
     payload: JwtPayload,
     text: string
 ) => {
-    await User.isUserExist({ _id: payload.userID });
+    const condition = await User.isUserExist({ _id: payload.userID });
 
-    const condition = await User.findOne({ role: USER_ROLES.ADMIN });
     if (!condition) {
         throw new ApiError(StatusCodes.NOT_FOUND,"Admin model not founded for update!");
     }

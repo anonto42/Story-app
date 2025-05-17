@@ -12,14 +12,23 @@ const createUserZodSchema = z.object({
 });
 
 const updateUserZodSchema = z.object({
-  name: z.string().optional(),
-  contact: z.string().optional(),
-  email: z.string().optional(),
-  location: z.string().optional(),
-  profile: z.string().optional(),
+  body: z.object({
+    name: z.string().optional(),
+    contact: z.string().optional(),
+    email: z.string().optional(),
+    location: z.string().optional(),
+    profile: z.string().optional(),
+  })
 });
+
+const subscription = z.object({
+  body: z.object({
+    planID: z.string({required_error: "You must give the id of your subscription plan"})
+  })
+})
 
 export const UserValidation = {
   createUserZodSchema,
   updateUserZodSchema,
+  subscription,
 };

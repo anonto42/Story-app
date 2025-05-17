@@ -7,6 +7,10 @@ import { IUser } from './user.interface';
 import { User } from './user.model'; 
 import { jwtHelper } from '../../../helpers/jwtHelper';
 import { eduEmailRegex } from '../../../regex/user';
+import { checkout, customers } from './user.route';
+import config from '../../../config';
+import { Subscription } from '../subscription/subscription.model';
+import { SUBSCRIPTION_DURATION_TIME, SUBSCRIPTION_TYPE } from '../../../enums/subscription';
 
 const createUserToDB = async (payload: Partial<IUser> ) => {
   let isEdu = false;
@@ -113,8 +117,118 @@ const filterData = async (
 ) => {
   const user = User.isUserExist({_id: payload.userID}); 
 
-
 }
+
+const subscribe = async (
+  paylaod: JwtPayload,
+  data: {
+    planID: string
+  }
+) => {
+  const user = await User.isUserExist({_id: paylaod.userID });
+  const packageData = await Subscription.findById(data.planID);
+  if (!packageData) {
+    throw new ApiError(StatusCodes.NOT_FOUND,"We can't find your package!")
+  };
+  if (!user.subscription.stripeCustomerID) {
+    const customer = await customers.create({
+      email: user.email,
+      name: user.name
+    });
+    if (!customer) {
+      throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR,"Failed to create the customer on the stripe!")
+    };
+    user.subscription.stripeCustomerID = customer.id;
+    await user.save();
+  };
+
+  const session = await checkout.sessions.create({
+    payment_method_types: ["card"],
+    mode: "payment",
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: packageData.packageName,
+            description: `This is the id of the plan your buying ${data.planID}`
+          },
+          unit_amount: packageData.packagePrice * 100,
+        },
+        quantity: 1
+      }
+    ],
+    metadata: {
+      name: user.name,
+      email: user.email,
+      amount: packageData.packagePrice,
+      userID: user._id.toString(), 
+      plan_id: data.planID,
+      plan_name: packageData.packageName
+    },
+    customer: user.subscription.stripeCustomerID.toString(),
+    success_url: `${config.server_url}/api/v1/user/subscribe-success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${config.server_url}/api/v1/user/subscribe-failed?session_id={CHECKOUT_SESSION_ID}`
+  })
+
+  return session.url
+}
+
+const subscribeSuccessfull = async (
+  seccionID: string
+) => {
+  const { metadata } = await checkout.sessions.retrieve(seccionID);
+  const user = await User.isUserExist({_id: metadata?.userID });
+  const subscriptionPlan = await Subscription.findById(metadata?.plan_id);
+
+  if (user.subscription.expireAT < new Date( Date.now() )) {
+    if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.MONTHLY ) {
+      user.subscription.expireAT = new Date( Date.now() + 30 * 24 * 60 * 60 * 1000 );
+      user.subscription.isSubscriped = true;
+      user.subscription.limite = 10;
+    } else if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.YEARLY) {
+      user.subscription.expireAT = new Date( Date.now() + 365 * 24 * 60 * 60 * 1000 );
+      user.subscription.isSubscriped = true;
+      user.subscription.limite = 15;
+    }
+  }
+
+  if (user.subscription.expireAT >= new Date()) {
+    if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.MONTHLY) {
+      user.subscription.expireAT = new Date(
+        user.subscription.expireAT.getTime() + 30 * 24 * 60 * 60 * 1000
+      );
+      user.subscription.isSubscriped = true;
+      user.subscription.limite = 10
+    } else if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.YEARLY) {
+      user.subscription.expireAT = new Date(
+        user.subscription.expireAT.getTime() + 365 * 24 * 60 * 60 * 1000
+      );
+      user.subscription.isSubscriped = true;
+      user.subscription.limite = 15
+    }
+  };
+
+  user.subscription.subscriptionID = subscriptionPlan?._id as string
+
+  await Subscription.create({
+    type: SUBSCRIPTION_TYPE.SUBSCRIBED,
+    userID: user._id,
+    subscriptionPlanId: subscriptionPlan?._id
+  })
+  await user.save();
+
+  return true
+}
+
+const subscribeFiled = async (
+  paylaod: JwtPayload,
+  planID: string
+) => {
+
+  return true
+}
+
 
 export const UserService = {
   createUserToDB,
@@ -122,5 +236,8 @@ export const UserService = {
   updateProfileToDB,
   getPolicy,
   getCondition,
-  filterData
+  filterData,
+  subscribe,
+  subscribeFiled,
+  subscribeSuccessfull
 };

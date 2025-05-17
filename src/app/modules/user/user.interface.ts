@@ -3,19 +3,22 @@ import { ACCOUNT_TYPE, USER_ROLES, USER_STSTUS, Verification_For } from '../../.
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
-  requestedAccountType: "REGULAR" | "STUDENT"
+  requestedAccountType: ACCOUNT_TYPE
   name: string;
   role: USER_ROLES;
   subscription: {
+    stripeCustomerID: string;
     limite: number;
     enrolled: Types.ObjectId[];
     isSubscriped: boolean;
     expireAT: Date;
+    subscriptionID: string;
   };
   accountType: string;
   freeVideo:{
     isAvailable: boolean;
     lastWatchedAt?: Date;
+    limit: Number;
   };
   contact: string;
   email: string;

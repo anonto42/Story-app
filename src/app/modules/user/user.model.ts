@@ -59,7 +59,9 @@ const userSchema = new Schema<IUser, UserModal>(
       limite: Number,
       enrolled: [{
         type: Schema.Types.ObjectId,
-      }]
+      }],
+      stripeCustomerID: String,
+      subscriptionID: Schema.Types.ObjectId
     },
     lastActive:{
       type: Date,
@@ -68,10 +70,14 @@ const userSchema = new Schema<IUser, UserModal>(
     freeVideo:{
       isAvailable: {
         type:Boolean,
-        default: false
+        default: true
       },
       lastWatchedAt:{
         type: Date
+      },
+      limit:{
+        type: Number,
+        default: 1
       }
     },
     otpVerification:{

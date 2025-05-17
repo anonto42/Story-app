@@ -8,6 +8,6 @@ export interface ISubscription extends Document{
     packagePrice: number;
     date: Date;
     status: string;
-    description: string;
+    description: string[];
     subscriptionDuration: string;
 }

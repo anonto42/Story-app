@@ -5,7 +5,10 @@ import fileUploadHandler from '../../middlewares/fileUploadHandler';
 import validateRequest from '../../middlewares/validateRequest';
 import { UserController } from './user.controller';
 import { UserValidation } from './user.validation';
+import Stripe from 'stripe';
+import config from '../../../config';
 const router = express.Router();
+export const { customers, checkout } = new Stripe(config.strip_secret_key as string)
 
 router
   .route('/')
@@ -22,6 +25,27 @@ router
     fileUploadHandler(),
     UserController.updateProfile
   )
+
+router
+  .route("/subscribe")
+  .post(
+    auth(USER_ROLES.ADMIN, USER_ROLES.USER),
+    validateRequest( UserValidation.subscription ),
+    UserController.subscribe
+  )
+
+router
+  .route('/subscribe-success')
+  .get(
+    UserController.subscribeSuccessfull
+  )
+
+router
+  .route('/subscribe-failed')
+  .get(
+    UserController.subscribeFailed
+  )
+
 
 router
   .route("/policy")

@@ -8,6 +8,8 @@ export default {
   node_env: process.env.NODE_ENV,
   port: process.env.PORT,
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
+  strip_secret_key: process.env.STRIPE_SECRET_KEY,
+  server_url: process.env.SERVER_URL!,
   jwt: {
     jwt_secret: process.env.JWT_SECRET,
     jwt_expire_in: process.env.JWT_EXPIRE_IN,

@@ -33,9 +33,9 @@ const subscriptionSchema = new Schema<ISubscription>(
       type: String,
       enum: SUBSCRIPTION_STATUS
     },
-    description: {
+    description: [{
       type: String
-    }
+    }]
   },
   { timestamps: true }
 );

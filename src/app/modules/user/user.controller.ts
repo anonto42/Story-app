@@ -8,6 +8,8 @@ import { User } from './user.model';
 import ApiError from '../../../errors/ApiError';
 import path from "path";
 import fs from "fs";
+import { paymentFailed, paymentSuccess } from '../../../helpers/paymentResHelper';
+import { ACCOUNT_TYPE } from '../../../enums/user';
 
 const createUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -84,8 +86,35 @@ const privacyAndPolicy = catchAsync(
 const fileContains = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
+    const {path, postID} = req.body;
     const filePath = req.query.path as string
     const isUser = await User.isUserExist({ _id: user.userID });
+
+    if (isUser.accountType === ACCOUNT_TYPE.REGULAR) {
+      if ( isUser.subscription.isSubscriped ) {
+        if ( isUser.subscription.expireAT < new Date( Date.now() ) ){
+          throw new ApiError(StatusCodes.GATEWAY_TIMEOUT,"Your subscription has ended. Please renew your plan to continue enjoying premium features.")
+        } else if (isUser.subscription.limite >= isUser.subscription.enrolled.length ) {
+          throw new ApiError(StatusCodes.GATEWAY_TIMEOUT,"You’ve reached your subscription limit. Please upgrade or renew your plan to continue using this feature.")
+        }
+      } else if (isUser.freeVideo.isAvailable) {
+        if (!Number(isUser.freeVideo.limit)) {
+          isUser.freeVideo.isAvailable = false;
+          await isUser.save();
+          throw new ApiError(StatusCodes.FORBIDDEN,"You’ve reached your free limit")
+        }
+      }
+    } else {
+      throw new ApiError(StatusCodes.EXPECTATION_FAILED,"Somthing was wrong on your account!")
+    }
+
+    const history = isUser.subscription.enrolled.filter( e => e === postID );
+    if (!history) {
+      isUser.subscription.enrolled.push(postID);
+      isUser.freeVideo.limit = Number(isUser.freeVideo.limit) > 0 ? Number(isUser.freeVideo.limit) - 1 : 0
+      await isUser.save()
+    }
+    
     
     if (!filePath) {
       throw new ApiError(StatusCodes.BAD_REQUEST,"You must give the file path to take the file")
@@ -150,6 +179,37 @@ const filterPosts = catchAsync(
 );
 
 
+const subscribe = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const {...data} = req.body;
+    const result = await UserService.subscribe(user,data)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully create the subscription!',
+      data: result,
+    });
+  }
+);
+
+const subscribeFailed = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // const sessionId = req.query.session_id;
+    // await UserService.subscribeFiled(user,sessionId as string)
+    return res.send(paymentFailed)
+  }
+);
+
+const subscribeSuccessfull = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const sessionId = req.query.session_id
+    await UserService.subscribeSuccessfull(sessionId as string)
+    return res.send(paymentSuccess)
+  }
+);
+
+
 export const UserController = { 
   createUser, 
   getUserProfile, 
@@ -157,5 +217,8 @@ export const UserController = {
   termsAndCondition,
   privacyAndPolicy,
   fileContains,
-  filterPosts
+  filterPosts,
+  subscribe,
+  subscribeFailed,
+  subscribeSuccessfull
 };

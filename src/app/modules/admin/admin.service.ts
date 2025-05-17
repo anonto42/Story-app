@@ -8,6 +8,8 @@ import { Request } from "express"
 import unlinkFile from "../../../shared/unlinkFile"
 import { Subscription } from "../subscription/subscription.model"
 import { USER_ROLES, USER_STSTUS } from "../../../enums/user"
+import { POST_TYPE } from "../../../enums/post"
+import { SUBSCRIPTION_TYPE } from "../../../enums/subscription"
 
 //Have to make some overview aggrigation for this
 const OverView = async (
@@ -22,7 +24,6 @@ const doAPost = async (
     req: Request, 
     user: any,
     {
-        countryFlagPath,
         coverPhotoPath,
         mainFilePath
     }:any
@@ -31,16 +32,17 @@ const doAPost = async (
     type,
     category,
     title,
-    mentorName,
+    singerName,
     targetedAge,
     duration,
     description,
+    language
   } = req.body;
 
  
   // Validate required files
-  if (!coverPhotoPath || !mainFilePath || !countryFlagPath) {
-    throw new Error('All required files (coverPhoto, media, countryFlag) must be uploaded.');
+  if (!coverPhotoPath || !mainFilePath ) {
+    throw new Error('All required files (coverPhoto, media) must be uploaded.');
   }
 
   // Create the Post
@@ -48,13 +50,13 @@ const doAPost = async (
     type: type.toString(),
     category,
     title,
-    mentorName,
+    singerName,
     targetedAge,
     duration,
     description,
     coverPhoto: coverPhotoPath,
     mainFile: mainFilePath,
-    countryFlag: countryFlagPath,
+    language: language,
     createdBy: user._id,
   });
 
@@ -69,12 +71,11 @@ const deleteApost = async (
     if (!postId) {
         throw new ApiError(StatusCodes.BAD_REQUEST,"You must give the post id to delete the post")
     };
-    const postDelete = await Post.findById(postId);
+    const postDelete = await Post.findByIdAndDelete(postId);
     if (!postDelete) {
         throw new ApiError(StatusCodes.NOT_FOUND,"Post dosn't exist!")
     };
 
-    unlinkFile(postDelete.countryFlag!);
     unlinkFile(postDelete.mainFile!);    
     unlinkFile(postDelete.coverPhoto!);
 
@@ -82,7 +83,7 @@ const deleteApost = async (
 }
 
 const getAllSubscriptions = async ( payload: JwtPayload) => {
-    await User.isUserExist(payload.userID)
+    await User.isUserExist({_id: payload.userID})
     return await Subscription.find()
         .populate('userID', 'name')
         .sort({ createdAt: -1 })
@@ -91,28 +92,54 @@ const getAllSubscriptions = async ( payload: JwtPayload) => {
 
 const ASubscription = async ( payload: JwtPayload, id: string ) => {
     await User.isUserExist({_id: payload.userID });
+    console.log(id)
 
       const subscription = await Subscription.findById(id)
-        .populate('userID', 'name email') // Full user info (adjust fields as needed)
-        .populate('subscriptionPlanId') // Full plan info
+        .populate('userID', 'name email')
+        .populate('subscriptionPlanId')
         .lean();
 
     return subscription
 }
+const getAllPlans = async ( payload: JwtPayload) => {
+    await User.isUserExist({_id: payload.userID})
+    return await Subscription.find({type: SUBSCRIPTION_TYPE.SUBSCRIPTION_PLAN})
+        .populate('userID', 'name')
+        .sort({ createdAt: -1 })
+        .lean();
+};
 
 const createSubscription = async (
     payload: JwtPayload,
     data: typeOfSub
 ) => {
-    const Admin = await User.isUserExist({_id: payload._id});
+    await User.isUserExist({_id: payload.userID});
 
+    const subscription = await Subscription.create({
+        type: SUBSCRIPTION_TYPE.SUBSCRIPTION_PLAN,
+        packageName: data.packageName,
+        packagePrice: data.packagePrice,
+        description: data.description,
+        subscriptionDuration: data.subscriptionDuration
+    })
+
+    return subscription
 }
 
 const updateSubscription = async (
     payload: JwtPayload,
     data: typeOfSub
 ) => {
-    const Admin = await User.isUserExist({_id: payload._id});
+    await User.isUserExist({_id: payload.userID});
+
+    const subscription = await Subscription.findByIdAndUpdate(data.id, {
+        packageName: data.packageName,
+        packagePrice: data.packagePrice,
+        subscriptionDuration: data.subscriptionDuration,
+        description: data.description
+    },{ new: true });
+
+    return subscription
 
 }
 
@@ -195,5 +222,6 @@ export const AdminService = {
     deleteUser,
     blockUser,
     updatePrivacy,
-    updateCondition
+    updateCondition,
+    getAllPlans
 }

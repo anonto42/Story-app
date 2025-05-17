@@ -46,6 +46,13 @@ router
     )
 
 router
+    .route("/plans")
+    .get(
+        auth( USER_ROLES.ADMIN ),
+        AdminController.plans
+    )
+
+router
     .route("/users")
     .get(
         auth( USER_ROLES.ADMIN ),

@@ -1,4 +1,5 @@
 import { POST_TYPE } from "../../../enums/post"
+import { SUBSCRIPTION_DURATION_TIME } from "../../../enums/subscription";
 
 
 export type story = {
@@ -15,5 +16,9 @@ export type story = {
 }
 
 export type Subscription = {
-    
+    id?: string;
+    description: string;
+    subscriptionDuration: SUBSCRIPTION_DURATION_TIME;
+    packagePrice: number;
+    packageName: string;
 }

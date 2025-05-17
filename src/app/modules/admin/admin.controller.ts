@@ -5,7 +5,6 @@ import { StatusCodes } from "http-status-codes";
 import { AdminService } from "./admin.service";
 import { getSingleFilePath } from "../../../shared/getFilePath";
 import { User } from "../user/user.model";
-import { Types } from "mongoose";
 import ApiError from "../../../errors/ApiError";
 
 
@@ -67,7 +66,7 @@ const subScriptions = catchAsync(
     let result;
     if (!id) {
       result = await AdminService.getAllSubscriptions(user);
-    } else if ( typeof id === typeof Types.ObjectId ) {
+    } else if ( id ) {
       result = await AdminService.ASubscription(user,id as string)
     }
 
@@ -80,11 +79,25 @@ const subScriptions = catchAsync(
   }
 );
 
-// Hear will a create subscription system
+const plans = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const result = await AdminService.getAllPlans(user)
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully get all subscription plans',
+      data: result,
+    });
+  }
+);
+
 const createScriptions = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    const result = await AdminService.getAllSubscriptions(user);
+    const {...data} = req.body;
+    const result = await AdminService.createSubscription(user,data);
 
     sendResponse(res, {
       success: true,
@@ -203,5 +216,6 @@ export const AdminController = {
   blockUser,
   deletetUser,
   privacyUpdate,
-  conditionUpdate
+  conditionUpdate,
+  plans
 }

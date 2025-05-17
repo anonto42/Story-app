@@ -37,5 +37,18 @@ router
     UserController.termsAndCondition
   )
 
+router
+  .route('/files')
+  .get(
+    auth( USER_ROLES.USER, USER_ROLES.ADMIN ),
+    UserController.fileContains
+  )
+
+router
+  .route('filter')
+  .get(
+    auth( USER_ROLES.USER, USER_ROLES.ADMIN ),
+    UserController.filterPosts
+  )
 
 export const UserRoutes = router;

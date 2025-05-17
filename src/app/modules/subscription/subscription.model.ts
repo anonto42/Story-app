@@ -33,9 +33,8 @@ const subscriptionSchema = new Schema<ISubscription>(
       type: String,
       enum: SUBSCRIPTION_STATUS
     },
-    condition: {
-      type: String,
-      min: 30
+    description: {
+      type: String
     }
   },
   { timestamps: true }

@@ -101,10 +101,26 @@ const getPolicy = async (
   return condition.privacyPolicy || "";
 }
 
+const filterData = async (
+  payload: JwtPayload,
+  query: {
+    storyOrMusic: "STORY" | "MUSIC", 
+    category: string,
+    duration: string,
+    age: string,
+    language: string
+  }
+) => {
+  const user = User.isUserExist({_id: payload.userID}); 
+
+
+}
+
 export const UserService = {
   createUserToDB,
   getUserProfileFromDB,
   updateProfileToDB,
   getPolicy,
-  getCondition
+  getCondition,
+  filterData
 };

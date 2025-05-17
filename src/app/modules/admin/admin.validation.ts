@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SUBSCRIPTION_DURATION_TIME } from "../../../enums/subscription";
 
 const postUpload = z.object({
     body: z.object({
@@ -15,13 +16,20 @@ const postUpload = z.object({
 
 const createSubZodModel = z.object({
     body: z.object({
-        title: z.string({required_error: "You must give the title of the post"})
+        description: z.string({required_error: "You must give the discription of your package"}),
+        subscriptionDuration: z.enum([SUBSCRIPTION_DURATION_TIME.MONTHLY, SUBSCRIPTION_DURATION_TIME.YEARLY]),
+        packagePrice: z.number({required_error: "You must give the price of your package"}),
+        packageName: z.string({required_error: "You must give the name of your package"})
     })
 })
 
 const updateSchemaZod = z.object({
     body: z.object({
-        title: z.string({required_error: "You must give the title of the post"})
+        description: z.string({required_error: "You must give the discription of your package"}),
+        subscriptionDuration: z.enum([SUBSCRIPTION_DURATION_TIME.MONTHLY, SUBSCRIPTION_DURATION_TIME.YEARLY]),
+        packagePrice: z.number({required_error: "You must give the price of your package"}),
+        packageName: z.string({required_error: "You must give the name of your package"}),
+        id: z.string({required_error: "You must give id for update the plan"})
     })
 })
 

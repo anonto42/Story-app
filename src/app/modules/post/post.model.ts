@@ -46,10 +46,10 @@ const postSchema = new Schema<IPost>(
         enum: LANGUAGE,
         default: LANGUAGE.ENGLISH
     },
-    views:{
-        type: Number,
-        default: 0
-    },
+    views:[{
+        type: Schema.Types.ObjectId,
+        ref: "users"
+    }],
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "users"

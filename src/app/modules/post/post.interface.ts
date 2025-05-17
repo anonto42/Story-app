@@ -12,6 +12,6 @@ export interface IPost extends Document {
     mainFile: string;
     language: string;
     category: string;
-    views: number;
+    views: Types.ObjectId[];
     createdBy: Types.ObjectId;
 }

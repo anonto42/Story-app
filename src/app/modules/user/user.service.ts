@@ -11,6 +11,7 @@ import { checkout, customers } from './user.route';
 import config from '../../../config';
 import { Subscription } from '../subscription/subscription.model';
 import { SUBSCRIPTION_DURATION_TIME, SUBSCRIPTION_TYPE } from '../../../enums/subscription';
+import { Post } from '../post/post.model';
 
 const createUserToDB = async (payload: Partial<IUser> ) => {
   let isEdu = false;
@@ -117,6 +118,23 @@ const filterData = async (
 ) => {
   const user = User.isUserExist({_id: payload.userID}); 
 
+}
+
+const aPostData = async (
+  payload: JwtPayload,
+  postID: string
+) => {
+  const user = await User.isUserExist({_id: payload.userID}); 
+  const post = await Post.findById(postID).select("-__v");
+  if (!post) {
+    throw new ApiError(StatusCodes.NOT_FOUND,"Post not founded!")
+  }
+  const isAllreadyViewed = post.views.filter( e => e === user._id );
+  if (!isAllreadyViewed) {
+    post.views.push(user._id);
+    post.save();
+  }
+  return post
 }
 
 const subscribe = async (
@@ -239,5 +257,6 @@ export const UserService = {
   filterData,
   subscribe,
   subscribeFiled,
-  subscribeSuccessfull
+  subscribeSuccessfull,
+  aPostData
 };

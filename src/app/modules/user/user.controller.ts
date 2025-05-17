@@ -178,6 +178,20 @@ const filterPosts = catchAsync(
   }
 );
 
+const APost = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const postID = req.query.id as string;
+    const result = await UserService.aPostData(user,postID)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully get the post!',
+      data: result,
+    });
+  }
+);
+
 
 const subscribe = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -220,5 +234,6 @@ export const UserController = {
   filterPosts,
   subscribe,
   subscribeFailed,
-  subscribeSuccessfull
+  subscribeSuccessfull,
+  APost
 };

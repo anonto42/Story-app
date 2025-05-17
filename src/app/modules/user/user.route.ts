@@ -69,10 +69,17 @@ router
   )
 
 router
-  .route('filter')
+  .route('/filter')
   .get(
     auth( USER_ROLES.USER, USER_ROLES.ADMIN ),
     UserController.filterPosts
+  )
+
+router
+  .route('/post')
+  .get(
+    auth( USER_ROLES.USER, USER_ROLES.ADMIN ),
+    UserController.APost
   )
 
 export const UserRoutes = router;

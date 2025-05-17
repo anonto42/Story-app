@@ -1,12 +1,13 @@
 import { model, Schema } from 'mongoose';
 import { IPost } from './post.interface';
+import { LANGUAGE, POST_TYPE } from '../../../enums/post';
 
 const postSchema = new Schema<IPost>(
   {
     type: {
         type: String,
         trim: true,
-        enum: ["MUSIC", "STORY"]
+        enum: POST_TYPE
     },
     category: {
         type: String,
@@ -16,7 +17,7 @@ const postSchema = new Schema<IPost>(
         type: String,
         required: true
     },
-    mentorName: {
+    singerName: {
         type: String,
         required: true
     },
@@ -40,9 +41,14 @@ const postSchema = new Schema<IPost>(
         type: String,
         required: true
     },
-    countryFlag: {
+    language: {
         type: String,
-        required: true
+        enum: LANGUAGE,
+        default: LANGUAGE.ENGLISH
+    },
+    views:{
+        type: Number,
+        default: 0
     },
     createdBy: {
         type: Schema.Types.ObjectId,

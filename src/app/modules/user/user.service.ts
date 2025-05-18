@@ -8,7 +8,6 @@ import { User } from './user.model';
 import { jwtHelper } from '../../../helpers/jwtHelper';
 import { eduEmailRegex } from '../../../regex/user';
 import { checkout, customers } from './user.route';
-import config from '../../../config';
 import { Subscription } from '../subscription/subscription.model';
 import { SUBSCRIPTION_DURATION_TIME, SUBSCRIPTION_TYPE } from '../../../enums/subscription';
 import { Post } from '../post/post.model';

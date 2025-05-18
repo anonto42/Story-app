@@ -27,8 +27,16 @@ const subscription = z.object({
   })
 })
 
+const dataForTheValidate = z.object({
+  body: z.object({
+    storyType: z.enum(["children","featured","popular"]),
+    limit: z.number({required_error: "must give the limit of your returned length"})
+  })
+})
+
 export const UserValidation = {
   createUserZodSchema,
   updateUserZodSchema,
   subscription,
+  dataForTheValidate
 };

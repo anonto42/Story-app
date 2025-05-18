@@ -6,7 +6,6 @@ import sendResponse from '../../../shared/sendResponse';
 import { UserService } from './user.service';
 import { User } from './user.model';
 import ApiError from '../../../errors/ApiError';
-import path from "path";
 import fs from "fs";
 import { paymentFailed, paymentSuccess } from '../../../helpers/paymentResHelper';
 import { ACCOUNT_TYPE } from '../../../enums/user';
@@ -178,6 +177,37 @@ const filterPosts = catchAsync(
   }
 );
 
+const dataForHome = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const {...data} = req.body;
+    const result = await UserService.dataForHome(user,data)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully get the data!',
+      data: result,
+    });
+  }
+);
+
+const addToPlayList =  catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const postID = req.body.post_id;
+    if (!postID) {
+      throw new ApiError(StatusCodes.BAD_REQUEST,"You must give the content id to save in the playlist")
+    }
+    const result = await UserService.addToPlaylist(user,postID)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully added to the playlist.',
+      data: result,
+    });
+  }
+);
+
 const APost = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
@@ -235,5 +265,7 @@ export const UserController = {
   subscribe,
   subscribeFailed,
   subscribeSuccessfull,
-  APost
+  APost,
+  dataForHome,
+  addToPlayList
 };

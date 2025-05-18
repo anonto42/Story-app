@@ -67,7 +67,18 @@ router
     auth( USER_ROLES.USER, USER_ROLES.ADMIN ),
     UserController.fileContains
   )
-
+  
+router
+  .route('/post')
+  .get(
+    auth( USER_ROLES.USER, USER_ROLES.ADMIN ),
+    UserController.APost
+  )
+  .patch(
+    auth( USER_ROLES.USER, USER_ROLES.ADMIN),
+    UserController.addToPlayList
+  )
+  
 router
   .route('/filter')
   .get(
@@ -76,10 +87,12 @@ router
   )
 
 router
-  .route('/post')
+  .route("/data")
   .get(
     auth( USER_ROLES.USER, USER_ROLES.ADMIN ),
-    UserController.APost
+    validateRequest( UserValidation.dataForTheValidate ),
+    UserController.dataForHome
   )
+  
 
 export const UserRoutes = router;

@@ -3,6 +3,7 @@ import { ACCOUNT_TYPE, USER_ROLES, USER_STSTUS, Verification_For } from '../../.
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
+  playList: Types.ObjectId[];
   requestedAccountType: ACCOUNT_TYPE
   name: string;
   role: USER_ROLES;

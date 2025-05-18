@@ -12,6 +12,7 @@ import config from '../../../config';
 import { Subscription } from '../subscription/subscription.model';
 import { SUBSCRIPTION_DURATION_TIME, SUBSCRIPTION_TYPE } from '../../../enums/subscription';
 import { Post } from '../post/post.model';
+import { Types } from 'mongoose';
 
 const createUserToDB = async (payload: Partial<IUser> ) => {
   let isEdu = false;
@@ -106,6 +107,26 @@ const getPolicy = async (
   return condition.privacyPolicy || "";
 }
 
+const addToPlaylist = async (
+  payload: JwtPayload,
+  post_id: string
+) => {
+  const user = await User.isUserExist({_id: payload.userID });
+  
+  const objectId = new Types.ObjectId(post_id);
+
+  const isExist = user.playList.some( e => e.equals(objectId));
+  if (!isExist) {
+    user.playList.push(objectId)
+    await user.save()
+  };
+
+  const userData = await User.findById(payload.userID).populate('playList');
+
+  return userData?.playList
+  
+}
+
 const filterData = async (
   payload: JwtPayload,
   query: {
@@ -117,6 +138,85 @@ const filterData = async (
   }
 ) => {
   const user = User.isUserExist({_id: payload.userID}); 
+  // Build filter object
+  const filter: any = {};
+
+  if (query.storyOrMusic) {
+    filter.type = query.storyOrMusic;
+  }
+
+  if (query.category) {
+    filter.category = query.category;
+  }
+
+  if (query.duration) {
+    filter.duration = query.duration;
+  }
+
+  if (query.age) {
+    const ageNumber = parseInt(query.age);
+    if (!isNaN(ageNumber)) {
+      filter.targetedAge = { $lte: ageNumber };
+    }
+  }
+
+  if (query.language) {
+    filter.language = query.language;
+  }
+
+  // Find posts using the dynamic filter
+  const results = await Post.find(filter).sort({ createdAt: -1 }); // optional: sorted by newest
+
+  return results;
+
+}
+
+const dataForHome = async (
+  payload: JwtPayload,
+  {
+    type,
+    limit = 5 // this was the defualt value
+  }:{
+    type: "children" | "featured" | "popular",
+    limit: number
+  }
+) => {
+  const user = await User.isUserExist({_id: payload.userID });
+
+  if (type === "popular") {
+    const popularPosts = await Post.aggregate([
+      {
+        $addFields: {
+          viewCount: { $size: "$views" } // Add a temporary field "viewCount"
+        }
+      },
+      {
+        $sort: { viewCount: -1 } // Sort by viewCount in descending order
+      },
+      {
+        $limit: limit // Limit results (default: 10)
+      },
+      {
+        $project: {
+          views: 0 // Optionally exclude views array
+        }
+      }
+    ])
+    return popularPosts
+  }
+
+  if ( type === 'children') {
+    const childrenContants = await Post.find({targetedAge: { $lt: 18 }})
+                                        .limit(limit);
+    return childrenContants
+  }
+
+  if (type === "featured") {
+    const recentPosts = await Post.find()
+      .sort({ createdAt: -1 })
+      .limit(limit);
+    return recentPosts;
+  }
 
 }
 
@@ -140,7 +240,9 @@ const aPostData = async (
 const subscribe = async (
   paylaod: JwtPayload,
   data: {
-    planID: string
+    planID: string,
+    protocol: string,
+    host: string
   }
 ) => {
   const user = await User.isUserExist({_id: paylaod.userID });
@@ -185,8 +287,8 @@ const subscribe = async (
       plan_name: packageData.packageName
     },
     customer: user.subscription.stripeCustomerID.toString(),
-    success_url: `${config.server_url}/api/v1/user/subscribe-success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${config.server_url}/api/v1/user/subscribe-failed?session_id={CHECKOUT_SESSION_ID}`
+    success_url: `${data.protocol}://${data.host}/api/v1/user/subscribe-success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${data.protocol}://${data.host}/api/v1/user/subscribe-failed?session_id={CHECKOUT_SESSION_ID}`
   })
 
   return session.url
@@ -258,5 +360,7 @@ export const UserService = {
   subscribe,
   subscribeFiled,
   subscribeSuccessfull,
-  aPostData
+  aPostData,
+  dataForHome,
+  addToPlaylist
 };

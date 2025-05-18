@@ -17,6 +17,10 @@ const userSchema = new Schema<IUser, UserModal>(
       enum: Object.values(USER_ROLES),
       required: true,
     },
+    playList:[{
+      type: Schema.Types.ObjectId,
+      ref: "posts"
+    }],
     email: {
       type: String,
       required: true,

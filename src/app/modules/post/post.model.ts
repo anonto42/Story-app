@@ -48,7 +48,8 @@ const postSchema = new Schema<IPost>(
     },
     views:[{
         type: Schema.Types.ObjectId,
-        ref: "users"
+        ref: "users",
+        default: ''
     }],
     createdBy: {
         type: Schema.Types.ObjectId,

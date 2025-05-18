@@ -12,6 +12,7 @@ import { Subscription } from '../subscription/subscription.model';
 import { SUBSCRIPTION_DURATION_TIME, SUBSCRIPTION_TYPE } from '../../../enums/subscription';
 import { Post } from '../post/post.model';
 import { Types } from 'mongoose';
+import { io } from '../../../helpers/socketHelper';
 
 const createUserToDB = async (payload: Partial<IUser> ) => {
   let isEdu = false;
@@ -344,6 +345,12 @@ const subscribeSuccessfull = async (
     subscriptionPlanId: subscriptionPlan?._id
   })
   await user.save();
+
+  io.emit("traeger-action",{
+    userName: user.name,
+    message:`User ${user.name} has subscribed to the ${subscriptionPlan?.packageName} plan`,
+    date: new Date( Date.now() )
+  })
 
   return true
 }

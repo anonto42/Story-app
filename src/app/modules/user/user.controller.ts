@@ -92,9 +92,9 @@ const fileContains = catchAsync(
     if (isUser.accountType === ACCOUNT_TYPE.REGULAR) {
       if ( isUser.subscription.isSubscriped ) {
         if ( isUser.subscription.expireAT < new Date( Date.now() ) ){
+          isUser.subscription.isSubscriped = false;
+          await isUser.save()
           throw new ApiError(StatusCodes.GATEWAY_TIMEOUT,"Your subscription has ended. Please renew your plan to continue enjoying premium features.")
-        } else if (isUser.subscription.limite >= isUser.subscription.enrolled.length ) {
-          throw new ApiError(StatusCodes.GATEWAY_TIMEOUT,"You’ve reached your subscription limit. Please upgrade or renew your plan to continue using this feature.")
         }
       } else if (isUser.freeVideo.isAvailable) {
         if (!Number(isUser.freeVideo.limit)) {
@@ -103,8 +103,6 @@ const fileContains = catchAsync(
           throw new ApiError(StatusCodes.FORBIDDEN,"You’ve reached your free limit")
         }
       }
-    } else {
-      throw new ApiError(StatusCodes.EXPECTATION_FAILED,"Somthing was wrong on your account!")
     }
 
     const history = isUser.subscription.enrolled.filter( e => e === postID );

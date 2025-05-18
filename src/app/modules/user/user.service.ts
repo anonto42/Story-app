@@ -315,11 +315,9 @@ const subscribeSuccessfull = async (
     if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.MONTHLY ) {
       user.subscription.expireAT = new Date( Date.now() + 30 * 24 * 60 * 60 * 1000 );
       user.subscription.isSubscriped = true;
-      user.subscription.limite = 10;
     } else if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.YEARLY) {
       user.subscription.expireAT = new Date( Date.now() + 365 * 24 * 60 * 60 * 1000 );
       user.subscription.isSubscriped = true;
-      user.subscription.limite = 15;
     }
   }
 
@@ -329,13 +327,11 @@ const subscribeSuccessfull = async (
         user.subscription.expireAT.getTime() + 30 * 24 * 60 * 60 * 1000
       );
       user.subscription.isSubscriped = true;
-      user.subscription.limite = 10
     } else if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.YEARLY) {
       user.subscription.expireAT = new Date(
         user.subscription.expireAT.getTime() + 365 * 24 * 60 * 60 * 1000
       );
       user.subscription.isSubscriped = true;
-      user.subscription.limite = 15
     }
   };
 

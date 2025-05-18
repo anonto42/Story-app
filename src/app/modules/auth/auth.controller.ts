@@ -77,9 +77,26 @@ const changePassword = catchAsync(
     }
 )
 
+const logout = catchAsync(
+    async( req: Request, res: Response ) => {
+        res.clearCookie('authorization', {
+            httpOnly: true,
+            secure: config.node_env === 'production',
+            sameSite: 'strict',
+        });
+
+        sendResponse(res, {
+            success: true,
+            statusCode: StatusCodes.OK,
+            message: "Logout successful",
+        });
+    }
+)
+
 export const AuthController = {
     SignIn,
     getOpt,
     verifyOtp,
-    changePassword
+    changePassword,
+    logout
 }

@@ -16,8 +16,65 @@ const OverView = async (
     payload: JwtPayload
 ) => {
     const admin = await User.isUserExist({_id: payload.userID})
+    // 1. Total Users
+    const totalUsers = await User.countDocuments();
+    // 2. Active Users (assume active if logged in within 7 days)
+    const activeUsers = await User.countDocuments({
+        lastLogin: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+    });
+    // 3. Total Revenue (sum of subscription amounts)
+    const totalRevenueAgg = await Subscription.aggregate([
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalRevenue = totalRevenueAgg[0]?.total || 0;
+     // 4. Total Subscriptions
+    const totalSubscriptions = await Subscription.countDocuments();
+    // 5. Revenue per Month (Bar Chart)
+    const monthlyRevenue = await Subscription.aggregate([
+        {
+            $group: {
+                _id: { $month: '$createdAt' },
+                total: { $sum: '$amount' }
+            }
+        },
+        {
+            $sort: { '_id': 1 }
+        }
+    ]);
+    // 6. Subscription Weekly (Line Chart)
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const weeklySubscription = await Subscription.aggregate([
+        {
+        $match: {
+            createdAt: { $gte: oneWeekAgo }
+        }
+        },
+        {
+        $group: {
+            _id: { $dayOfWeek: '$createdAt' },
+            total: { $sum: 1 }
+        }
+        },
+        {
+        $sort: { '_id': 1 }
+        }
+    ]);
 
-    return admin
+    // 7. Engagement (as percentage of active users to total)
+    const engagementRate = totalUsers > 0
+        ? Math.round((activeUsers / totalUsers) * 100)
+        : 0;
+
+    return {
+    totalUsers,
+    activeUsers,
+    totalRevenue,
+    totalSubscriptions,
+    monthlyRevenue,        
+    weeklySubscription,  
+    engagementRate  
+  };
 }
 
 const doAPost = async (
@@ -148,7 +205,7 @@ const updateSubscription = async (
 const allUsers = async (paylaod: JwtPayload) => {
     await User.isUserExist({_id: paylaod.userID })
 
-    return User.find().select("-password")
+    return User.find().select("-password -otpVerification -__v")
 }
 
 const AUser = async (paylaod: JwtPayload, id: string) => {

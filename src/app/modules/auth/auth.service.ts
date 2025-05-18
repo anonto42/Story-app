@@ -146,9 +146,20 @@ const changePassword = async (
     return true;
 } 
 
+const logOut = async ( 
+    payload : {
+        email: string,
+        password: string
+    }
+) => {
+    const { email, password } = payload;
+    const isUser = await User.isUserExist({email});
+}
+
 export const AuthServices = {
     signIn,
     emailSend,
     verifyOtp,
-    changePassword
+    changePassword,
+    logOut
 }

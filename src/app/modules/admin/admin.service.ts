@@ -141,8 +141,8 @@ const deleteApost = async (
 
 const getAllSubscriptions = async ( payload: JwtPayload) => {
     await User.isUserExist({_id: payload.userID})
-    return await Subscription.find()
-        .populate('userID', 'name')
+    return await Subscription.find({type: SUBSCRIPTION_TYPE.SUBSCRIBED})
+        .populate('userID',"-password -otpVerification -__v")
         .sort({ createdAt: -1 })
         .lean();
 };
@@ -209,7 +209,7 @@ const allUsers = async (paylaod: JwtPayload) => {
 
 const AUser = async (paylaod: JwtPayload, id: string) => {
     await User.isUserExist({_id: paylaod.userID})
-    return User.isUserExist({_id: id})
+    return User.findById(id).select("-password -otpVerification")
 }
 
 const deleteUser = async (payload: JwtPayload, id: string) => {

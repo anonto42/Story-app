@@ -251,7 +251,14 @@ const APost = catchAsync(
 const subscribe = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    const {...data} = req.body;
+    const protocol = req.protocol;
+    const host = req.headers.host;
+    const alldata = req.body;
+    const data = {
+      protocol,
+      host,
+      ...alldata
+    }
     const result = await UserService.subscribe(user,data)
     sendResponse(res, {
       success: true,

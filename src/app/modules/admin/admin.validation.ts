@@ -13,10 +13,9 @@ const postUpload = z.object({
     })
 })
 
-
 const createSubZodModel = z.object({
     body: z.object({
-        description: z.string({required_error: "You must give the discription of your package"}),
+        description: z.array(z.string({required_error: "You must give the discription of your package"})),
         subscriptionDuration: z.enum([SUBSCRIPTION_DURATION_TIME.MONTHLY, SUBSCRIPTION_DURATION_TIME.YEARLY]),
         packagePrice: z.number({required_error: "You must give the price of your package"}),
         packageName: z.string({required_error: "You must give the name of your package"})
@@ -25,7 +24,7 @@ const createSubZodModel = z.object({
 
 const updateSchemaZod = z.object({
     body: z.object({
-        description: z.string({required_error: "You must give the discription of your package"}),
+        description: z.array(z.string({required_error: "You must give the discription of your package"})),
         subscriptionDuration: z.enum([SUBSCRIPTION_DURATION_TIME.MONTHLY, SUBSCRIPTION_DURATION_TIME.YEARLY]),
         packagePrice: z.number({required_error: "You must give the price of your package"}),
         packageName: z.string({required_error: "You must give the name of your package"}),

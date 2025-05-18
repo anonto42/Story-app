@@ -17,7 +17,7 @@ export type story = {
 
 export type Subscription = {
     id?: string;
-    description: string;
+    description: string[];
     subscriptionDuration: SUBSCRIPTION_DURATION_TIME;
     packagePrice: number;
     packageName: string;

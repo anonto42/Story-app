@@ -12,8 +12,9 @@ import { Subscription } from '../subscription/subscription.model';
 import { SUBSCRIPTION_DURATION_TIME, SUBSCRIPTION_TYPE } from '../../../enums/subscription';
 import { Post } from '../post/post.model';
 import { Types } from 'mongoose';
-import { io } from '../../../helpers/socketHelper';
 import { IPost } from '../post/post.interface';
+import { Server } from 'socket.io';
+const io = global.io as Server
 
 const createUserToDB = async (payload: Partial<IUser> ) => {
   let isEdu = false;
@@ -183,16 +184,16 @@ const filterData = async (
 const dataForHome = async (
   payload: JwtPayload,
   {
-    type,
+    storyType,
     limit = 5 // this was the defualt value
   }:{
-    type: "children" | "featured" | "popular",
+    storyType: "children" | "featured" | "popular",
     limit: number
   }
 ) => {
-  const user = await User.isUserExist({_id: payload.userID });
+  await User.isUserExist({_id: payload.userID });
 
-  if (type === "popular") {
+  if (storyType === "popular") {
     const popularPosts = await Post.aggregate([
       {
         $addFields: {
@@ -214,13 +215,13 @@ const dataForHome = async (
     return popularPosts
   }
 
-  if ( type === 'children') {
+  if ( storyType === 'children') {
     const childrenContants = await Post.find({targetedAge: { $lt: 18 }})
-                                        .limit(limit);
+                                        .limit(limit);                            
     return childrenContants
   }
 
-  if (type === "featured") {
+  if (storyType === "featured") {
     const recentPosts = await Post.find()
       .sort({ createdAt: -1 })
       .limit(limit);
@@ -347,11 +348,17 @@ const subscribeSuccessfull = async (
   })
   await user.save();
 
-  io.emit("traeger-action",{
-    userName: user.name,
-    message:`User ${user.name} has subscribed to the ${subscriptionPlan?.packageName} plan`,
-    date: new Date( Date.now() )
-  })
+  const data = {
+      userName: user.name,
+      message: `User ${user.name} has subscribed to the ${subscriptionPlan?.packageName} plan`,
+      date: new Date(),
+    }
+
+  if (!io) {
+    console.error("Socket.io is not initialized!");
+  } else {
+    io.emit("notification", data );
+  }
 
   return true
 }

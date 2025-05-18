@@ -14,7 +14,7 @@ const subscriptionSchema = new Schema<ISubscription>(
     },
     userID: {
       type: Schema.Types.ObjectId,
-      ref: "users"
+      ref: "user"
     },
     subscriptionPlanId: {
       type: Schema.Types.ObjectId,

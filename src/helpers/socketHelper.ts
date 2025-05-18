@@ -18,6 +18,3 @@ const socket = (io: Server) => {
 };
 
 export const socketHelper = { socket };
-
-//@ts-ignore
-export const io = global.io;

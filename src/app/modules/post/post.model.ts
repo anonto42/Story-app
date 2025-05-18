@@ -48,12 +48,11 @@ const postSchema = new Schema<IPost>(
     },
     views:[{
         type: Schema.Types.ObjectId,
-        ref: "users",
-        default: ''
+        ref: "user"
     }],
     createdBy: {
         type: Schema.Types.ObjectId,
-        ref: "users"
+        ref: "user"
     }
   },
   { timestamps: true }

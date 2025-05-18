@@ -1,4 +1,5 @@
 import { JwtPayload } from 'jsonwebtoken';
+import { Server } from 'socket.io';
 
 declare global {
   namespace Express {
@@ -6,4 +7,5 @@ declare global {
       user: JwtPayload;
     }
   }
+  var io: Server | undefined;
 }

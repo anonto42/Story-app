@@ -19,7 +19,7 @@ const userSchema = new Schema<IUser, UserModal>(
     },
     playList:[{
       type: Schema.Types.ObjectId,
-      ref: "posts"
+      ref: "post"
     }],
     email: {
       type: String,

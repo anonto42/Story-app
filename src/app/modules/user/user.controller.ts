@@ -208,6 +208,19 @@ const addToPlayList =  catchAsync(
   }
 );
 
+const getThePlaylist =  catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const result = await UserService.getPlaylist(user)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully added to the playlist.',
+      data: result,
+    });
+  }
+);
+
 const APost = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
@@ -221,7 +234,6 @@ const APost = catchAsync(
     });
   }
 );
-
 
 const subscribe = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -267,5 +279,6 @@ export const UserController = {
   subscribeSuccessfull,
   APost,
   dataForHome,
-  addToPlayList
+  addToPlayList,
+  getThePlaylist
 };

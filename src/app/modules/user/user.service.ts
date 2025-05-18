@@ -127,6 +127,14 @@ const addToPlaylist = async (
   
 }
 
+const getPlaylist = async (
+  payload: JwtPayload
+) => {
+  const playlist = (await User.isUserExist({_id: payload.userID })).populate("playList");
+  
+  return (await playlist).playList
+}
+
 const filterData = async (
   payload: JwtPayload,
   query: {
@@ -362,5 +370,6 @@ export const UserService = {
   subscribeSuccessfull,
   aPostData,
   dataForHome,
-  addToPlaylist
+  addToPlaylist,
+  getPlaylist
 };

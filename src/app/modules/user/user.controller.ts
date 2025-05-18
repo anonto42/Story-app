@@ -177,6 +177,19 @@ const filterPosts = catchAsync(
   }
 );
 
+const dataForFilter = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+    const result = await UserService.categoryzeData(user)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully the categoryzed data!',
+      data: result,
+    });
+  }
+);
+
 const dataForHome = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
@@ -280,5 +293,6 @@ export const UserController = {
   APost,
   dataForHome,
   addToPlayList,
-  getThePlaylist
+  getThePlaylist,
+  dataForFilter
 };

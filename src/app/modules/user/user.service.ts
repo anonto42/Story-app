@@ -13,6 +13,7 @@ import { SUBSCRIPTION_DURATION_TIME, SUBSCRIPTION_TYPE } from '../../../enums/su
 import { Post } from '../post/post.model';
 import { Types } from 'mongoose';
 import { io } from '../../../helpers/socketHelper';
+import { IPost } from '../post/post.interface';
 
 const createUserToDB = async (payload: Partial<IUser> ) => {
   let isEdu = false;
@@ -363,6 +364,32 @@ const subscribeFiled = async (
   return true
 }
 
+const categoryzeData = async (payload: JwtPayload) => {
+  // Ensure the user exists
+  await User.isUserExist({ _id: payload.userID });
+
+  // Fetch distinct filter values
+  const [types, categories, durations, languages, ages] = await Promise.all([
+    Post.distinct('type'),
+    Post.distinct('category'),
+    Post.distinct('duration'),
+    Post.distinct('language'),
+    Post.find().select('targetedAge -_id'),
+  ]);
+
+  // Convert targetedAge values to a unique set of rounded years/months
+  const ageSet = new Set<number>();
+  ages.forEach((post: IPost) => ageSet.add(post.targetedAge));
+  const ageArray = Array.from(ageSet).sort((a, b) => a - b);
+
+  return {
+    artists: types,
+    categories,
+    durations,
+    languages,
+    targetedAges: ageArray
+  };
+};
 
 export const UserService = {
   createUserToDB,
@@ -377,5 +404,6 @@ export const UserService = {
   aPostData,
   dataForHome,
   addToPlaylist,
-  getPlaylist
+  getPlaylist,
+  categoryzeData
 };

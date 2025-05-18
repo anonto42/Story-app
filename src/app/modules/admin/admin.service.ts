@@ -1,14 +1,13 @@
 import { JwtPayload } from "jsonwebtoken"
 import { User } from "../user/user.model"
-import { story, Subscription as typeOfSub } from "./input.types"
+import { Subscription as typeOfSub } from "./input.types"
 import { Post } from "../post/post.model"
 import ApiError from "../../../errors/ApiError"
 import { StatusCodes } from "http-status-codes"
 import { Request } from "express"
 import unlinkFile from "../../../shared/unlinkFile"
 import { Subscription } from "../subscription/subscription.model"
-import { USER_ROLES, USER_STSTUS } from "../../../enums/user"
-import { POST_TYPE } from "../../../enums/post"
+import { USER_STSTUS } from "../../../enums/user"
 import { SUBSCRIPTION_TYPE } from "../../../enums/subscription"
 
 //Have to make some overview aggrigation for this
@@ -153,7 +152,7 @@ const ASubscription = async ( payload: JwtPayload, id: string ) => {
     console.log(id)
 
       const subscription = await Subscription.findById(id)
-        .populate('userID', 'name email')
+        .populate('userID',"-password")
         .populate('subscriptionPlanId')
         .lean();
 

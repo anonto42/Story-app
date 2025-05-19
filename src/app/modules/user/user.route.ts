@@ -81,7 +81,7 @@ router
     auth( USER_ROLES.USER, USER_ROLES.ADMIN ),
     UserController.getThePlaylist
   )
-  .post(
+  .patch(
     auth( USER_ROLES.USER, USER_ROLES.ADMIN),
     UserController.addToPlayList
   )

@@ -103,7 +103,6 @@ router
 router
   .route("/data")
   .get(
-    auth( USER_ROLES.USER, USER_ROLES.ADMIN ),
     validateRequest( UserValidation.dataForTheValidate ),
     UserController.dataForHome
   )

@@ -180,7 +180,6 @@ const filterData = async (
 }
 
 const dataForHome = async (
-  payload: JwtPayload,
   {
     storyType,
     limit = 5 // this was the defualt value
@@ -189,24 +188,26 @@ const dataForHome = async (
     limit: number
   }
 ) => {
-  await User.isUserExist({_id: payload.userID });
 
   if (storyType === "popular") {
     const popularPosts = await Post.aggregate([
       {
         $addFields: {
-          viewCount: { $size: "$views" } // Add a temporary field "viewCount"
+          viewCount: { $size: "$views" }
         }
       },
       {
-        $sort: { viewCount: -1 } // Sort by viewCount in descending order
+        $sort: { viewCount: -1 }
       },
       {
-        $limit: limit // Limit results (default: 10)
+        $limit: limit
       },
       {
         $project: {
-          views: 0 // Optionally exclude views array
+          views: 0,
+          mainFile: 0,
+          __v: 0,
+          updatedAt: 0
         }
       }
     ])
@@ -215,14 +216,16 @@ const dataForHome = async (
 
   if ( storyType === 'children') {
     const childrenContants = await Post.find({targetedAge: { $lt: 18 }})
-                                        .limit(limit);                            
+                                        .limit(limit)
+                                        .select("-views -__v -mainFile --updatedAt");                            
     return childrenContants
   }
 
   if (storyType === "featured") {
     const recentPosts = await Post.find()
       .sort({ createdAt: -1 })
-      .limit(limit);
+      .limit(limit)
+      .select("-views -__v -mainFile --updatedAt");
     return recentPosts;
   }
 

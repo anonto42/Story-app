@@ -190,9 +190,8 @@ const dataForFilter = catchAsync(
 
 const dataForHome = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user;
     const {...data} = req.body;
-    const result = await UserService.dataForHome(user,data)
+    const result = await UserService.dataForHome(data)
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,

@@ -122,7 +122,7 @@ userSchema.statics.isMatchPassword = async (
 userSchema.statics.isUserExist = async ( payload: object ): Promise<IUser> => {
   const user = await User.findOneAndUpdate(
     payload,
-    { lastActive: new Date() },
+    { lastActive: new Date( Date.now() ) },
     { new: true }
   );
   if (!user) {

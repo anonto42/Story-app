@@ -10,25 +10,25 @@ import { Subscription } from "../subscription/subscription.model"
 import { USER_STSTUS } from "../../../enums/user"
 import { SUBSCRIPTION_TYPE } from "../../../enums/subscription"
 
-//Have to make some overview aggrigation for this
+
 const OverView = async (
     payload: JwtPayload
 ) => {
     const admin = await User.isUserExist({_id: payload.userID})
-    // 1. Total Users
+    
     const totalUsers = await User.countDocuments();
-    // 2. Active Users (assume active if logged in within 7 days)
-    const activeUsers = await User.countDocuments({
-        lastLogin: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
-    });
-    // 3. Total Revenue (sum of subscription amounts)
+    
+    const activeUsersCount = await User.countDocuments({
+        lastActive: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+        });
+        
     const totalRevenueAgg = await Subscription.aggregate([
         { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const totalRevenue = totalRevenueAgg[0]?.total || 0;
-     // 4. Total Subscriptions
+    
     const totalSubscriptions = await Subscription.countDocuments();
-    // 5. Revenue per Month (Bar Chart)
+    
     const monthlyRevenue = await Subscription.aggregate([
         {
             $group: {
@@ -40,7 +40,7 @@ const OverView = async (
             $sort: { '_id': 1 }
         }
     ]);
-    // 6. Subscription Weekly (Line Chart)
+    
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     const weeklySubscription = await Subscription.aggregate([
@@ -60,14 +60,14 @@ const OverView = async (
         }
     ]);
 
-    // 7. Engagement (as percentage of active users to total)
+    
     const engagementRate = totalUsers > 0
-        ? Math.round((activeUsers / totalUsers) * 100)
+        ? Math.round((activeUsersCount / totalUsers) * 100)
         : 0;
 
     return {
     totalUsers,
-    activeUsers,
+    activeUsersCount,
     totalRevenue,
     totalSubscriptions,
     monthlyRevenue,        

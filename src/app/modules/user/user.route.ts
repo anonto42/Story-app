@@ -108,4 +108,11 @@ router
     UserController.dataForHome
   )
 
+router
+  .route("/search")
+  .get(
+    auth( USER_ROLES.USER, USER_ROLES.ADMIN ),
+    UserController.searchData
+  )
+
 export const UserRoutes = router;

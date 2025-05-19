@@ -283,6 +283,19 @@ const subscribeSuccessfull = catchAsync(
   }
 );
 
+const searchData = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const string = req.query.string as string
+    const result = await UserService.searchData(string)
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Successfully fetched search results!',
+      data: result,
+    });
+  }
+);
+
 
 export const UserController = { 
   createUser, 
@@ -299,5 +312,6 @@ export const UserController = {
   dataForHome,
   addToPlayList,
   getThePlaylist,
-  dataForFilter
+  dataForFilter,
+  searchData
 };

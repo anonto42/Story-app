@@ -394,6 +394,29 @@ const categoryzeData = async (payload: JwtPayload) => {
   };
 };
 
+const searchData = async (
+  searchString: string
+) => {
+  
+  if (!searchString) {
+    return [];
+  }
+  
+  const regex = new RegExp(searchString, 'i');
+
+   const results = await Post.find({
+    $or: [
+      { title: regex },
+      { singerName: regex },
+      { description: regex },
+      { category: regex },
+      { type: regex },
+    ]
+  }).populate('createdBy', 'name email');
+
+  return results
+};
+
 export const UserService = {
   createUserToDB,
   getUserProfileFromDB,
@@ -408,5 +431,6 @@ export const UserService = {
   dataForHome,
   addToPlaylist,
   getPlaylist,
-  categoryzeData
+  categoryzeData,
+  searchData
 };

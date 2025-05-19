@@ -455,7 +455,7 @@ const searchData = async (
   
   const regex = new RegExp(searchString, 'i');
 
-   const results = await Post.find({
+  const results = await Post.find({
     $or: [
       { title: regex },
       { singerName: regex },
@@ -463,9 +463,16 @@ const searchData = async (
       { category: regex },
       { type: regex },
     ]
-  }).populate('createdBy', 'name email');
+  })
+  .populate('createdBy', 'name email')
+  .lean();
 
-  return results
+  const resultsWithViewCount = results.map(post => ({
+    ...post,
+    viewCount: post.views?.length || 0
+  }));
+
+  return resultsWithViewCount
 };
 
 export const UserService = {

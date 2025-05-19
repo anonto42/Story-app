@@ -13,8 +13,6 @@ import { SUBSCRIPTION_DURATION_TIME, SUBSCRIPTION_TYPE } from '../../../enums/su
 import { Post } from '../post/post.model';
 import { Types } from 'mongoose';
 import { IPost } from '../post/post.interface';
-import { Server } from 'socket.io';
-const io = global.io as Server
 
 const createUserToDB = async (payload: Partial<IUser> ) => {
   let isEdu = false;
@@ -349,6 +347,8 @@ const subscribeSuccessfull = async (
       message: `User ${user.name} has subscribed to the ${subscriptionPlan?.packageName} plan`,
       date: new Date(),
     }
+
+  const io = global.io
 
   if (!io) {
     console.error("Socket.io is not initialized!");

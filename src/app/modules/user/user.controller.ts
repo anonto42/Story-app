@@ -7,6 +7,7 @@ import { UserService } from './user.service';
 import { User } from './user.model';
 import ApiError from '../../../errors/ApiError';
 import fs from "fs";
+import path from 'path';
 import { paymentFailed, paymentSuccess } from '../../../helpers/paymentResHelper';
 import { ACCOUNT_TYPE } from '../../../enums/user';
 
@@ -85,32 +86,35 @@ const privacyAndPolicy = catchAsync(
 const fileContains = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    const {path, postID} = req.body;
-    const filePath = req.query.path as string
+    const {filePath} = req.body;
     const isUser = await User.isUserExist({ _id: user.userID });
+    const today = new Date();
+    today.setHours(0,0,0,0)
+    const expireDate = new Date(isUser.subscription.expireAT);
+    expireDate.setHours(0, 0, 0, 0);
+
 
     if (isUser.accountType === ACCOUNT_TYPE.REGULAR) {
       if ( isUser.subscription.isSubscriped ) {
-        if ( isUser.subscription.expireAT < new Date( Date.now() ) ){
+        if ( expireDate < today ){
           isUser.subscription.isSubscriped = false;
           await isUser.save()
           throw new ApiError(StatusCodes.GATEWAY_TIMEOUT,"Your subscription has ended. Please renew your plan to continue enjoying premium features.")
         }
-      } else if (isUser.freeVideo.isAvailable) {
-        if (!Number(isUser.freeVideo.limit)) {
-          isUser.freeVideo.isAvailable = false;
-          await isUser.save();
-          throw new ApiError(StatusCodes.FORBIDDEN,"You’ve reached your free limit")
+      } else if (isUser.freeVideo.lastWatchedAt) {
+        const lastWatch = new Date(isUser.freeVideo.lastWatchedAt);
+              lastWatch.setHours(0,0,0,0);
+        if (lastWatch.getTime() >= today.getTime()) {
+          throw new ApiError(
+            StatusCodes.FORBIDDEN,
+            "You've already used your free video today. Please come back tomorrow."
+          )
         }
       }
     }
 
-    const history = isUser.subscription.enrolled.filter( e => e === postID );
-    if (!history) {
-      isUser.subscription.enrolled.push(postID);
-      isUser.freeVideo.limit = Number(isUser.freeVideo.limit) > 0 ? Number(isUser.freeVideo.limit) - 1 : 0
-      await isUser.save()
-    }
+    isUser.freeVideo.lastWatchedAt = new Date( Date.now() )
+    await isUser.save();
     
     
     if (!filePath) {

@@ -215,17 +215,56 @@ const dataForHome = async (
   }
 
   if ( storyType === 'children') {
-    const childrenContants = await Post.find({targetedAge: { $lt: 18 }})
-                                        .limit(limit)
-                                        .select("-views -__v -mainFile --updatedAt");                            
-    return childrenContants
+    const childrenContents = await Post.aggregate([
+        {
+          $match: {
+            targetedAge: { $lt: 18 }
+          }
+        },
+        {
+          $addFields: {
+            viewCount: { $size: "$views" }
+          }
+        },
+        {
+          $project: {
+            views: 0,
+            mainFile: 0,
+            __v: 0,
+            updatedAt: 0
+          }
+        },
+        {
+          $limit: limit
+        }
+      ]);                         
+    return childrenContents
   }
 
   if (storyType === "featured") {
-    const recentPosts = await Post.find()
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .select("-views -__v -mainFile --updatedAt");
+    const recentPosts = await Post.aggregate([
+        {
+          $addFields: {
+            viewCount: { $size: "$views" }
+          }
+        },
+        {
+          $project: {
+            views: 0,
+            mainFile: 0,
+            __v: 0,
+            updatedAt: 0
+          }
+        },
+        {
+          $sort: {
+            createdAt: -1
+          }
+        },
+        {
+          $limit: limit
+        }
+      ]);   
     return recentPosts;
   }
 
@@ -235,18 +274,40 @@ const aPostData = async (
   payload: JwtPayload,
   postID: string
 ) => {
-  const user = await User.isUserExist({_id: payload.userID}); 
+  const user = await User.isUserExist({ _id: payload.userID });
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
+  }
+
   const post = await Post.findById(postID).select("-__v");
   if (!post) {
-    throw new ApiError(StatusCodes.NOT_FOUND,"Post not founded!")
+    throw new ApiError(StatusCodes.NOT_FOUND, "Post not found!");
   }
-  const isAllreadyViewed = post.views.filter( e => e === user._id );
-  if (!isAllreadyViewed) {
+
+  const hasAlreadyViewed = post.views.some(viewerId =>
+    viewerId.toString() === user._id.toString()
+  );
+
+  if (!hasAlreadyViewed) {
     post.views.push(user._id);
-    post.save();
+    await post.save();
+    console.log(`User ${user._id} added to views`);
   }
-  return post
-}
+
+  return {
+    _id: post._id,
+    type: post.type,
+    category: post.category,
+    title: post.title,
+    singerName: post.singerName,
+    targetedAge: post.targetedAge,
+    duration: post.duration,
+    description: post.description,
+    coverPhoto: post.coverPhoto,
+    mainFile: post.mainFile,
+    language: post.language
+  };
+};
 
 const subscribe = async (
   paylaod: JwtPayload,
@@ -309,32 +370,19 @@ const subscribeSuccessfull = async (
   seccionID: string
 ) => {
   const { metadata } = await checkout.sessions.retrieve(seccionID);
+  if (!metadata) {
+    throw new ApiError(StatusCodes.NOT_ACCEPTABLE, "This is not a valid request to validate the request!")
+  }
   const user = await User.isUserExist({_id: metadata?.userID });
   const subscriptionPlan = await Subscription.findById(metadata?.plan_id);
 
-  if (user.subscription.expireAT < new Date( Date.now() )) {
-    if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.MONTHLY ) {
-      user.subscription.expireAT = new Date( Date.now() + 30 * 24 * 60 * 60 * 1000 );
-      user.subscription.isSubscriped = true;
-    } else if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.YEARLY) {
-      user.subscription.expireAT = new Date( Date.now() + 365 * 24 * 60 * 60 * 1000 );
-      user.subscription.isSubscriped = true;
-    }
+  if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.MONTHLY ) {
+    user.subscription.expireAT = new Date( Date.now() + 30 * 24 * 60 * 60 * 1000 );
+    user.subscription.isSubscriped = true;
+  } else if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.YEARLY) {
+    user.subscription.expireAT = new Date( Date.now() + 365 * 24 * 60 * 60 * 1000 );
+    user.subscription.isSubscriped = true;
   }
-
-  if (user.subscription.expireAT >= new Date()) {
-    if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.MONTHLY) {
-      user.subscription.expireAT = new Date(
-        user.subscription.expireAT.getTime() + 30 * 24 * 60 * 60 * 1000
-      );
-      user.subscription.isSubscriped = true;
-    } else if (subscriptionPlan?.subscriptionDuration === SUBSCRIPTION_DURATION_TIME.YEARLY) {
-      user.subscription.expireAT = new Date(
-        user.subscription.expireAT.getTime() + 365 * 24 * 60 * 60 * 1000
-      );
-      user.subscription.isSubscriped = true;
-    }
-  };
 
   user.subscription.subscriptionID = subscriptionPlan?._id as string
 

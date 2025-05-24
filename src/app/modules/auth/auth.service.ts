@@ -15,8 +15,8 @@ const signIn = async (
     const { email, password } = payload;
     const isUser = await User.isUserExist({email});
 
-    const isPassword = User.isMatchPassword(password,isUser.password)
-
+    const isPassword = await User.isMatchPassword(password,isUser.password);
+    
     if (
         !isPassword
     ) {

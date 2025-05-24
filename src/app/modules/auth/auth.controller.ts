@@ -24,6 +24,7 @@ const SignIn = catchAsync(
                         sucess: true,
                         statusCode: StatusCodes.OK,
                         message: "Welcome to deshboard",
+                        adminData:result
                     })
         }
         sendResponse(res, {

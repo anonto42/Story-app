@@ -32,7 +32,7 @@ export interface IUser extends Document {
   otpVerification:{
     isVerified: {
       status:boolean,
-      time: Date
+      time: string
     },
     otp: number,
     time: Date,

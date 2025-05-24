@@ -5,6 +5,7 @@ import ApiError from "../../../errors/ApiError";
 import generateOTP from "../../../util/generateOTP";
 import { emailTemplate } from "../../../shared/emailTemplate";
 import { emailHelper } from "../../../helpers/emailHelper";
+import { compare, hash } from "bcryptjs";
 
 const signIn = async ( 
     payload : {
@@ -16,7 +17,7 @@ const signIn = async (
     const isUser = await User.isUserExist({email});
 
     const isPassword = await User.isMatchPassword(password,isUser.password);
-    
+
     if (
         !isPassword
     ) {
@@ -36,7 +37,7 @@ const signIn = async (
 }
 
 const emailSend = async (
-    payload : { email: string, verificationType: "FORMAT_PASSWORD" | "CHANGE_PASSWORD" | "ACCOUNT_VERIFICATION" }
+    payload : { email: string, verificationType: "FORMAT_PASSWORD" | "CHANGE_PASSWORD" }
 ) => {
     const { email } = payload;
     const isUser = await User.isUserExist({email});
@@ -48,41 +49,51 @@ const emailSend = async (
     const forgetPassword = emailTemplate.sendMail({otp, email,name: isUser.name, subjet: payload.verificationType});
     emailHelper.sendEmail(forgetPassword);
 
+    const token = await hash(otp.toString(), 1)
+    
     await User.updateOne(
         { email },
         {
           $set: {
             'otpVerification.otp': otp,
-            'otpVerification.time': new Date(Date.now() + 3 * 60000),
+            'otpVerification.time': token,
             'otpVerification.verificationType': payload.verificationType,
           },
         }
     );
       
-    return { user:{ email: isUser.email } }
+    return { user:{ email: isUser.email }, token }
 }
 
 const verifyOtp = async (
-    payload : { email: string, otp: string }
+    payload : { email: string, otp: string ,token: string}
 ) => {
-    const { email, otp } = payload;
+    const { email, otp, token } = payload;
     const isUser = await User.isUserExist({email});
 
-    if (Number(otp) !== isUser.otpVerification.otp && !isUser.otpVerification.isVerified && isUser.otpVerification.time < new Date( Date.now() )) {
+    const compareHash = await compare( otp,  token);
+    
+    if (!compareHash) {
+        throw new ApiError(
+            StatusCodes.BAD_REQUEST,
+            "Your otp was wrong!"
+        );
+    };
+
+    if (Number(otp) !== isUser.otpVerification.otp && !isUser.otpVerification.isVerified && !isUser.otpVerification.time ) {
         throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Your otp verification in not acceptable for this moment!")
     };
 
     await User.findByIdAndUpdate({_id: isUser._id},{$set: {
         "otpVerification.isVerified.status": true,
-        "otpVerification.isVerified.time": new Date(Date.now() + 10 * 60 * 1000)
+        "otpVerification.isVerified.time": token
     }});
 
     await User.updateOne(
         { email },
         {
           $set: {
-            'otpVerification.otp': 0,
-            'otpVerification.time': new Date(),
+            'otpVerification.time': "",
             'otpVerification.verificationType': ""
           },
         }
@@ -97,18 +108,24 @@ const changePassword = async (
         currentPassword: string, 
         password: string, 
         confirmPassword: string, 
-        oparationType: string
+        oparationType: string,
+        token: string
     }
 ) => {
-    const { email, currentPassword, password, confirmPassword, oparationType } = payload;
+    const { email, currentPassword, password, confirmPassword, oparationType, token } = payload;
     const isUser = await User.isUserExist({email});
 
     if ( !isUser.otpVerification.isVerified.status ) {
         throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Your verification date is over now you can't change the password!")
     };
+
+    const tokenHased = await compare( isUser.otpVerification.otp.toString() , token );
     
-    if ( isUser.otpVerification.isVerified.time < new Date( Date.now())  ) {
-        throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Your verification date is over now you can't change the password!")
+    if (!tokenHased) {
+        throw new ApiError(
+            StatusCodes.NOT_ACCEPTABLE,
+            "your token was wrong!"
+        )
     };
     
     if (password !== confirmPassword) {
@@ -126,7 +143,7 @@ const changePassword = async (
             $set:{
                 password: password,
                 "otpVerification.isVerified.status": false,
-                "otpVerification.isVerified.time": new Date( 0 ),
+                "otpVerification.isVerified.time": "",
             }
         });
 
@@ -138,7 +155,7 @@ const changePassword = async (
             $set:{
                 password: password,
                 "otpVerification.isVerified.status": false,
-                "otpVerification.isVerified.time": new Date( 0 ),
+                "otpVerification.isVerified.time": "",
             }
         });
     };

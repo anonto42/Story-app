@@ -90,10 +90,10 @@ const userSchema = new Schema<IUser, UserModal>(
           type: Boolean,
           default: false
         },
-        time: Date
+        time: String
       },
       otp: Number,
-      time: Date,
+      time: String,
       verificationType:{
         type: String,
         enum: Verification_For,

@@ -20,47 +20,172 @@ const OverView = async (
     
     const activeUsersCount = await User.countDocuments({
         lastActive: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
-        });
-        
-    const totalRevenueAgg = await Subscription.aggregate([
-        { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]);
-    const totalRevenue = totalRevenueAgg[0]?.total || 0;
+    });
     
+    const getTotalRevenue = async () => {
+        const totalRevenue = await Subscription.aggregate([
+            {
+            $match: {
+                type: SUBSCRIPTION_TYPE.SUBSCRIBED,
+            }
+            },
+            {
+            $lookup: {
+                from: 'subscriptions',
+                localField: 'subscriptionPlanId',
+                foreignField: '_id',
+                as: 'planDetails'
+            }
+            },
+            {
+            $unwind: "$planDetails"
+            },
+            {
+            $group: {
+                _id: null,
+                totalRevenue: { $sum: "$planDetails.packagePrice" }
+            }
+            }
+        ]);
+
+        // If the aggregation has no results, set totalRevenue to 0
+        return totalRevenue.length > 0 ? totalRevenue[0].totalRevenue : 0;
+    };
+    const totalRevenue = await getTotalRevenue();
+
+
+    // const totalRevenue = totalRevenueAgg[0]?.total || 0;
+    
+    const plans = await Subscription.find({type: SUBSCRIPTION_TYPE.SUBSCRIPTION_PLAN});
+
     const totalSubscriptions = await Subscription.countDocuments();
     
-    const monthlyRevenue = await Subscription.aggregate([
-        {
-            $group: {
-                _id: { $month: '$createdAt' },
-                total: { $sum: '$amount' }
-            }
-        },
-        {
-            $sort: { '_id': 1 }
-        }
-    ]);
     
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const weeklySubscription = await Subscription.aggregate([
-        {
-        $match: {
-            createdAt: { $gte: oneWeekAgo }
-        }
-        },
-        {
-        $group: {
-            _id: { $dayOfWeek: '$createdAt' },
-            total: { $sum: 1 }
-        }
-        },
-        {
-        $sort: { '_id': 1 }
-        }
+    const monthlySalesByYear = await Subscription.aggregate([
+            {
+                $match: {
+                    type: SUBSCRIPTION_TYPE.SUBSCRIBED,
+                // status: SUBSCRIPTION_STATUS.ACTIVE, // Optional: only count active subscriptions
+                }
+            },
+            {
+                $lookup: {
+                    from: 'subscriptions', // Collection with plan details
+                    localField: 'subscriptionPlanId',
+                    foreignField: '_id',
+                    as: 'planDetails'
+                }
+            },
+            {
+                $unwind: "$planDetails"
+            },
+            {
+                $addFields: {
+                    year: { $year: "$createdAt" },  // or "$date" if you use custom date
+                    month: { $month: "$createdAt" }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: "$year",
+                        month: "$month"
+                    },
+                    totalSales: { $sum: "$planDetails.packagePrice" }
+                }
+            },
+            {
+                $group: {
+                _id: "$_id.year",
+                    monthlySales: {
+                        $push: {
+                        month: "$_id.month",
+                        totalSales: "$totalSales"
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    year: "$_id",
+                    monthlySales: {
+                        $map: {
+                        input: "$monthlySales",
+                        as: "item",
+                        in: {
+                            month: {
+                            $arrayElemAt: [
+                                [
+                                "", "January", "February", "March", "April",
+                                "May", "June", "July", "August",
+                                "September", "October", "November", "December"
+                                ],
+                                "$$item.month"
+                            ]
+                            },
+                            totalSales: "$$item.totalSales"
+                        }
+                        }
+                    }
+                }
+            },
+            {
+                $sort: { year: 1 }
+            }
     ]);
 
-    
+    const startOfWeek = new Date();
+    startOfWeek.setHours(0, 0, 0, 0);
+    // Set to Sunday (start of week in JS default)
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const weeklySubscriptions = await Subscription.aggregate([
+    {
+        $match: {
+        type: SUBSCRIPTION_TYPE.SUBSCRIBED,
+        //   status: SUBSCRIPTION_STATUS.ACTIVE,
+        createdAt: { $gte: startOfWeek, $lte: endOfWeek }
+        }
+    },
+    {
+        $addFields: {
+        dayOfWeek: { $dayOfWeek: "$createdAt" } // Sunday=1 ... Saturday=7
+        }
+    },
+    {
+        $group: {
+        _id: "$dayOfWeek",
+        count: { $sum: 1 }
+        }
+    },
+    {
+        $project: {
+        _id: 0,
+        dayOfWeek: "$_id",
+        count: 1
+        }
+    },
+    {
+        $sort: { dayOfWeek: 1 }
+    }
+    ]);
+
+    // To map day number to name:
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    const result = dayNames.map((name, index) => {
+    const dayData = weeklySubscriptions.find(w => w.dayOfWeek === index + 1);
+    return {
+        day: name,
+        count: dayData ? dayData.count : 0
+    };
+    });
+
     const engagementRate = totalUsers > 0
         ? Math.round((activeUsersCount / totalUsers) * 100)
         : 0;
@@ -69,9 +194,9 @@ const OverView = async (
     totalUsers,
     activeUsersCount,
     totalRevenue,
-    totalSubscriptions,
-    monthlyRevenue,        
-    weeklySubscription,  
+    totalSubscriptions: totalSubscriptions - plans.length ,
+    monthlySalesByYear,      
+    weeklySubscription: result,  
     engagementRate  
   };
 }

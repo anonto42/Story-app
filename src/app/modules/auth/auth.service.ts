@@ -66,7 +66,10 @@ const emailSend = async (
 }
 
 const verifyOtp = async (
-    payload : { email: string, otp: string ,token: string}
+    payload : { 
+        email: string, 
+        otp: string ,
+        token: string}
 ) => {
     const { email, otp, token } = payload;
     const isUser = await User.isUserExist({email});

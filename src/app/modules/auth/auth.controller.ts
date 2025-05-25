@@ -53,7 +53,7 @@ const getOpt = catchAsync(
 const verifyOtp = catchAsync(
     async( req: Request, res: Response ) => {
         const body = req.body;
-        const token = req.headers.authorization?.split(" ")[1];
+        const token = req.headers.authorization!.split(" ")[1];
         const data = { ...body, token };
         const result = await AuthServices.verifyOtp(data);
 

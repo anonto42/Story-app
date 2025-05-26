@@ -142,9 +142,11 @@ const changePassword = async (
             throw new ApiError(StatusCodes.BAD_REQUEST,"You have gived the wrong old password!")
         };
 
+        const hasedPasswor = await hash(password,8)
+
         await User.findByIdAndUpdate(isUser._id, {
             $set:{
-                password: password,
+                password: hasedPasswor,
                 "otpVerification.isVerified.status": false,
                 "otpVerification.isVerified.time": "",
             }
@@ -154,9 +156,11 @@ const changePassword = async (
 
     if ( oparationType === "FORGET_PASSWORD" ) {
 
+        const hasedPasswor = await hash(password,8)
+
         await User.findByIdAndUpdate(isUser._id, {
             $set:{
-                password: password,
+                password: hasedPasswor,
                 "otpVerification.isVerified.status": false,
                 "otpVerification.isVerified.time": "",
             }

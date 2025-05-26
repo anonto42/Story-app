@@ -274,7 +274,6 @@ const getAllSubscriptions = async ( payload: JwtPayload) => {
 
 const ASubscription = async ( payload: JwtPayload, id: string ) => {
     await User.isUserExist({_id: payload.userID });
-    console.log(id)
 
       const subscription = await Subscription.findById(id)
         .populate('userID',"-password")
@@ -287,6 +286,14 @@ const ASubscription = async ( payload: JwtPayload, id: string ) => {
 const getAllPlans = async ( payload: JwtPayload) => {
     await User.isUserExist({_id: payload.userID})
     return await Subscription.find({type: SUBSCRIPTION_TYPE.SUBSCRIPTION_PLAN})
+        .populate('userID', 'name')
+        .sort({ createdAt: -1 })
+        .lean();
+};
+
+const getAPlans = async ( payload: JwtPayload, planID: any ) => {
+    await User.isUserExist({_id: payload.userID})
+    return await Subscription.findById(planID)
         .populate('userID', 'name')
         .sort({ createdAt: -1 })
         .lean();
@@ -404,5 +411,6 @@ export const AdminService = {
     blockUser,
     updatePrivacy,
     updateCondition,
-    getAllPlans
+    getAllPlans,
+    getAPlans
 }

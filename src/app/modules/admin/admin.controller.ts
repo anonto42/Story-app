@@ -82,12 +82,18 @@ const subScriptions = catchAsync(
 const plans = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    const result = await AdminService.getAllPlans(user)
+    const id = req.query.id as string;
+    let result;
 
+    if (id) {
+      result = await AdminService.getAPlans(user,id);
+    }else{
+      result = await AdminService.getAllPlans(user)
+    }
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,
-      message: 'Successfully get all subscription plans',
+      message: 'Successfully get subscription plans',
       data: result,
     });
   }

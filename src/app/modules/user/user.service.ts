@@ -418,20 +418,19 @@ const subscribeFiled = async (
   return true
 }
 
-const categoryzeData = async (payload: JwtPayload) => {
-  // Ensure the user exists
+const categoryzeData = async (
+  payload: JwtPayload
+) => {
   await User.isUserExist({ _id: payload.userID });
 
-  // Fetch distinct filter values
   const [types, categories, durations, languages, ages] = await Promise.all([
     Post.distinct('type'),
     Post.distinct('category'),
     Post.distinct('duration'),
     Post.distinct('language'),
-    Post.find().select('targetedAge -_id'),
+    Post.find().select('targetedAge -_id')
   ]);
 
-  // Convert targetedAge values to a unique set of rounded years/months
   const ageSet = new Set<number>();
   ages.forEach((post: IPost) => ageSet.add(post.targetedAge));
   const ageArray = Array.from(ageSet).sort((a, b) => a - b);

@@ -6,6 +6,8 @@ import generateOTP from "../../../util/generateOTP";
 import { emailTemplate } from "../../../shared/emailTemplate";
 import { emailHelper } from "../../../helpers/emailHelper";
 import { compare, hash } from "bcryptjs";
+import config from "../../../config";
+import jwt, { JwtPayload, Secret } from 'jsonwebtoken';
 
 const signIn = async ( 
     payload : {
@@ -69,7 +71,8 @@ const verifyOtp = async (
     payload : { 
         email: string, 
         otp: string ,
-        token: string}
+        token: string
+    }
 ) => {
     const { email, otp, token } = payload;
     const isUser = await User.isUserExist({email});
@@ -118,10 +121,41 @@ const changePassword = async (
     const { email, currentPassword, password, confirmPassword, oparationType, token } = payload;
     const isUser = await User.isUserExist({email});
 
-    if ( !isUser.otpVerification.isVerified.status ) {
-        throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Your verification date is over now you can't change the password!")
+    if (password !== confirmPassword) {
+        throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Please check your new password and the confirm password!")
     };
 
+    if ( oparationType === "CHANGE_PASSWORD" ) {
+        
+        const user: any = await jwt.verify(token,config.jwt.jwt_secret as Secret);
+        if (!user) {
+            throw new ApiError( 
+                StatusCodes.NOT_ACCEPTABLE,
+                "You are not available to do that acction!"
+            )
+        }
+        const { userID } = user;
+        const isPassword = await User.isMatchPassword(currentPassword,isUser.password);;
+        if (!isPassword) {
+            throw new ApiError(
+                StatusCodes.BAD_REQUEST,
+                "You have gived the wrong old password!"
+            )
+        };
+
+        const hasedPasswor = await hash(password,8)
+
+        await User.findByIdAndUpdate(userID, {
+            $set:{
+                password: hasedPasswor,
+                "otpVerification.isVerified.status": false,
+                "otpVerification.isVerified.time": "",
+            }
+        });
+
+        return true;
+    };
+    
     const tokenHased = await compare( isUser.otpVerification.otp.toString() , token );
     
     if (!tokenHased) {
@@ -130,30 +164,7 @@ const changePassword = async (
             "your token was wrong!"
         )
     };
-    
-    if (password !== confirmPassword) {
-        throw new ApiError(StatusCodes.NOT_ACCEPTABLE,"Please check your new password and the confirm password!")
-    };
-
-    if ( oparationType === "CHANGE_PASSWORD" ) {
         
-        const isCurrentPasswordValid = await User.isMatchPassword(currentPassword, isUser.password)
-        if (!isCurrentPasswordValid) {
-            throw new ApiError(StatusCodes.BAD_REQUEST,"You have gived the wrong old password!")
-        };
-
-        const hasedPasswor = await hash(password,8)
-
-        await User.findByIdAndUpdate(isUser._id, {
-            $set:{
-                password: hasedPasswor,
-                "otpVerification.isVerified.status": false,
-                "otpVerification.isVerified.time": "",
-            }
-        });
-
-    };
-
     if ( oparationType === "FORGET_PASSWORD" ) {
 
         const hasedPasswor = await hash(password,8)

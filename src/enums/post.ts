@@ -8,5 +8,6 @@ export enum POST_TYPE {
 export enum LANGUAGE {
     ENGLISH = "ENGLISH",
     FRENCH = "FRENCH",
-    GERMAN = "GERMAN"
+    GERMAN = "GERMAN",
+    SPANISH = "SPANISH",
 }

@@ -169,7 +169,9 @@ const filterPosts = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
     const {...data} = req.body;
-    const result = await UserService.filterData(user,data)
+    const limit = data.limit;
+    const page = data.page
+    const result = await UserService.filterData(user,data,page,limit)
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,
@@ -225,7 +227,8 @@ const addToPlayList =  catchAsync(
 const getThePlaylist =  catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    const result = await UserService.getPlaylist(user)
+    const {...data} = req.body;
+    const result = await UserService.getPlaylist(user,data)
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,
@@ -289,7 +292,8 @@ const subscribeSuccessfull = catchAsync(
 const searchData = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const string = req.query.string as string
-    const result = await UserService.searchData(string)
+    const {...data} = req.body;
+    const result = await UserService.searchData(string,data.page,data.limit)
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,

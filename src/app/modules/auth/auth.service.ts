@@ -70,7 +70,7 @@ const emailSend = async (
 const verifyOtp = async (
     payload : { 
         email: string, 
-        otp: string ,
+        otp: string,
         token: string
     }
 ) => {
@@ -92,19 +92,12 @@ const verifyOtp = async (
 
     await User.findByIdAndUpdate({_id: isUser._id},{$set: {
         "otpVerification.isVerified.status": true,
-        "otpVerification.isVerified.time": token
+        "otpVerification.isVerified.time": token,
+        "idVerifyed": true,
+        'otpVerification.time': "",
+        'otpVerification.verificationType': ""
     }});
-
-    await User.updateOne(
-        { email },
-        {
-          $set: {
-            'otpVerification.time': "",
-            'otpVerification.verificationType': ""
-          },
-        }
-    );
-      
+    
     return true;
 }
 

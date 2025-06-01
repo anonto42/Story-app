@@ -1,40 +1,8 @@
 // controllers/postController.ts
 import { Request, Response } from 'express';
-import AWS from 'aws-sdk';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import Post from '../models/Post';
-
-const s3 = new AWS.S3({
-  region: process.env.AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY!,
-    secretAccessKey: process.env.AWS_SECRET_KEY!,
-  },
-});
-
-const transcribe = new AWS.TranscribeService({
-  region: process.env.AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY!,
-    secretAccessKey: process.env.AWS_SECRET_KEY!,
-  },
-});
-
-// Convert Transcribe JSON to VTT
-function jsonToVtt(transcriptJson: any): string {
-  let result = 'WEBVTT\n\n';
-  transcriptJson.results.items.forEach((item: any, index: number) => {
-    if (item.type === 'pronunciation') {
-      const start = parseFloat(item.start_time);
-      const end = parseFloat(item.end_time);
-      const startTime = new Date(start * 1000).toISOString().substr(11, 12);
-      const endTime = new Date(end * 1000).toISOString().substr(11, 12);
-      result += `${index + 1}\n${startTime} --> ${endTime}\n${item.alternatives[0].content}\n\n`;
-    }
-  });
-  return result;
-}
 
 export const uploadPost = async (req: Request, res: Response) => {
   try {
@@ -117,40 +85,39 @@ export const uploadPost = async (req: Request, res: Response) => {
 
 
 
-// controllers/postController.ts
-import { Request, Response } from 'express';
+// import { Request, Response } from 'express';
 
-export const getPostWithSignedUrls = async (req: Request, res: Response) => {
-  try {
-    const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ error: 'Post not found' });
+// export const getPostWithSignedUrls = async (req: Request, res: Response) => {
+//   try {
+//     const post = await Post.findById(req.params.id);
+//     if (!post) return res.status(404).json({ error: 'Post not found' });
 
-    const mediaKey = post.mediaUrl.split('.com/')[1];
-    const subtitleKey = post.subtitleUrl.split('.com/')[1];
+//     const mediaKey = post.mediaUrl.split('.com/')[1];
+//     const subtitleKey = post.subtitleUrl.split('.com/')[1];
 
-    const signedMediaUrl = s3.getSignedUrl('getObject', {
-      Bucket: process.env.S3_BUCKET!,
-      Key: mediaKey,
-      Expires: 300,
-    });
+//     const signedMediaUrl = s3.getSignedUrl('getObject', {
+//       Bucket: process.env.S3_BUCKET!,
+//       Key: mediaKey,
+//       Expires: 300,
+//     });
 
-    const signedSubtitleUrl = s3.getSignedUrl('getObject', {
-      Bucket: process.env.S3_BUCKET!,
-      Key: subtitleKey,
-      Expires: 300,
-    });
+//     const signedSubtitleUrl = s3.getSignedUrl('getObject', {
+//       Bucket: process.env.S3_BUCKET!,
+//       Key: subtitleKey,
+//       Expires: 300,
+//     });
 
-    res.json({
-      title: post.title,
-      description: post.description,
-      content: post.content,
-      mediaUrl: signedMediaUrl,
-      subtitleUrl: signedSubtitleUrl,
-    });
-  } catch (err) {
-    console.error('Fetch error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
+//     res.json({
+//       title: post.title,
+//       description: post.description,
+//       content: post.content,
+//       mediaUrl: signedMediaUrl,
+//       subtitleUrl: signedSubtitleUrl,
+//     });
+//   } catch (err) {
+//     console.error('Fetch error:', err);
+//     res.status(500).json({ error: 'Server error' });
+//   }
+// };
 
 

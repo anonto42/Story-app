@@ -107,6 +107,10 @@ const userSchema = new Schema<IUser, UserModal>(
       type: String,
       trim: true
     },
+    idVerifyed:{
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );

@@ -5,7 +5,6 @@ import ApiError from '../../../errors/ApiError';
 import unlinkFile from '../../../shared/unlinkFile';
 import { IUser } from './user.interface';
 import { User } from './user.model'; 
-import { jwtHelper } from '../../../helpers/jwtHelper';
 import { eduEmailRegex } from '../../../regex/user';
 import { checkout, customers } from './user.route';
 import { Subscription } from '../subscription/subscription.model';
@@ -13,6 +12,10 @@ import { SUBSCRIPTION_DURATION_TIME, SUBSCRIPTION_TYPE } from '../../../enums/su
 import { Post } from '../post/post.model';
 import { Types } from 'mongoose';
 import { IPost } from '../post/post.interface';
+import { hash } from 'bcryptjs';
+import generateOTP from '../../../util/generateOTP';
+import { emailTemplate } from '../../../shared/emailTemplate';
+import { emailHelper } from '../../../helpers/emailHelper';
 
 const createUserToDB = async (payload: Partial<IUser> ) => {
   let isEdu = false;
@@ -24,6 +27,14 @@ const createUserToDB = async (payload: Partial<IUser> ) => {
     }
   }
 
+  const email = payload.email as string;
+  const name = payload.name as string;
+  const otp = generateOTP();
+  const forgetPassword = emailTemplate.sendMail({otp, email,name, subjet: "Verify user"});
+  emailHelper.sendEmail(forgetPassword);
+  const token = await hash(otp.toString(), 1)
+
+
   const userData = {
     name: payload.name,
     role: USER_ROLES.USER,
@@ -32,7 +43,10 @@ const createUserToDB = async (payload: Partial<IUser> ) => {
     password: payload.password,
     location: payload.location, 
     status: USER_STSTUS.ACTIVE,
-    accountType: isEdu? ACCOUNT_TYPE.STUDENT : ACCOUNT_TYPE.REGULAR
+    accountType: isEdu? ACCOUNT_TYPE.STUDENT : ACCOUNT_TYPE.REGULAR,
+    otpVerification:{
+      otp
+    }
   }
   
   const createUser = await User.create(userData);
@@ -40,15 +54,15 @@ const createUserToDB = async (payload: Partial<IUser> ) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user');
   }
 
-  const Token = jwtHelper.createToken({userID: createUser._id.toString(),role: USER_ROLES.USER})
-
   return {user:{
     name: createUser.name,
     email: createUser.email,
     contact: createUser.contact,
     profile: createUser.profile,
-    location: createUser.location
-  },Token}
+    location: createUser.location,
+    token,
+    otp
+  }}
 };
 
 const getUserProfileFromDB = async (
@@ -59,7 +73,9 @@ const getUserProfileFromDB = async (
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
-
+  if (!isExistUser.idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  }
   return isExistUser;
 };
 
@@ -71,6 +87,9 @@ const updateProfileToDB = async (
   const isExistUser = await User.findById(userID);
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+  }
+  if (!isExistUser.idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
   }
 
   //unlink file here
@@ -88,10 +107,13 @@ const updateProfileToDB = async (
 const getCondition = async (
     payload: JwtPayload
 ) => {
-  await User.isUserExist({ _id: payload.userID });
+  const isExistUser =await User.isUserExist({ _id: payload.userID });
   const condition = await User.findOne({ role: USER_ROLES.ADMIN });
   if (!condition) {
     throw new ApiError(StatusCodes.NOT_FOUND,"Condition and condition was not founded!");
+  }
+  if (!isExistUser.idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
   }
   return condition.termsConditions || "";
 }
@@ -99,10 +121,13 @@ const getCondition = async (
 const getPolicy = async (
     payload: JwtPayload
 ) => {
-  await User.isUserExist({ _id: payload.userID });
+  const isExistUser = await User.isUserExist({ _id: payload.userID });
   const condition = await User.findOne({ role: USER_ROLES.ADMIN });
   if (!condition) {
     throw new ApiError(StatusCodes.NOT_FOUND,"Privacy and policy was not founded!");
+  }
+  if (!isExistUser.idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
   }
   return condition.privacyPolicy || "";
 }
@@ -113,6 +138,12 @@ const addToPlaylist = async (
 ) => {
   const user = await User.isUserExist({_id: payload.userID });
   
+  if (!user.idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  }
+  if (!user.idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  }
   const objectId = new Types.ObjectId(post_id);
 
   const isExist = user.playList.some( e => e.equals(objectId));
@@ -128,12 +159,34 @@ const addToPlaylist = async (
 }
 
 const getPlaylist = async (
-  payload: JwtPayload
+  payload: JwtPayload,
+  {
+    page = 1,
+    limit = 10
+  }
 ) => {
-  const playlist = (await User.isUserExist({_id: payload.userID })).populate("playList");
-  
-  return (await playlist).playList
-}
+  const skip = (page - 1) * limit;
+
+  const user = await User.findById(payload.userID)
+    .populate({
+      path: "playList",
+      options: {
+        skip,
+        limit,
+        sort: { createdAt: -1 } // optional sorting by newest
+      }
+    });
+
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
+  }
+
+  if (!(user as any).idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  }
+
+  return user.playList;
+};
 
 const filterData = async (
   payload: JwtPayload,
@@ -143,10 +196,16 @@ const filterData = async (
     duration: string,
     age: string,
     language: string
-  }
+  },
+  page = 1,
+  limit = 10
 ) => {
-  const user = User.isUserExist({_id: payload.userID}); 
-  // Build filter object
+  const user = await User.isUserExist({ _id: payload.userID }); 
+
+  if (!user.idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  }
+
   const filter: any = {};
 
   if (query.storyOrMusic) {
@@ -172,22 +231,36 @@ const filterData = async (
     filter.language = query.language;
   }
 
-  // Find posts using the dynamic filter
-  const results = await Post.find(filter).sort({ createdAt: -1 }); // optional: sorted by newest
+  const skip = (page - 1) * limit;
 
-  return results;
+  const [results, total] = await Promise.all([
+    Post.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Post.countDocuments(filter)
+  ]);
 
-}
+  return {
+    results,
+    total,
+    totalPages: Math.ceil(total / limit),
+    currentPage: page
+  };
+};
 
 const dataForHome = async (
   {
     storyType,
-    limit = 5 // this was the defualt value
-  }:{
+    limit = 5,
+    page = 1,
+  }: {
     storyType: "children" | "featured" | "popular",
-    limit: number
+    limit?: number,
+    page?: number
   }
 ) => {
+  const skip = (page - 1) * limit;
 
   if (storyType === "popular") {
     const popularPosts = await Post.aggregate([
@@ -200,6 +273,9 @@ const dataForHome = async (
         $sort: { viewCount: -1 }
       },
       {
+        $skip: skip
+      },
+      {
         $limit: limit
       },
       {
@@ -210,71 +286,80 @@ const dataForHome = async (
           updatedAt: 0
         }
       }
-    ])
-    return popularPosts
+    ]);
+    return popularPosts;
   }
 
-  if ( storyType === 'children') {
+  if (storyType === "children") {
     const childrenContents = await Post.aggregate([
-        {
-          $match: {
-            targetedAge: { $lt: 18 }
-          }
-        },
-        {
-          $addFields: {
-            viewCount: { $size: "$views" }
-          }
-        },
-        {
-          $project: {
-            views: 0,
-            mainFile: 0,
-            __v: 0,
-            updatedAt: 0
-          }
-        },
-        {
-          $limit: limit
+      {
+        $match: {
+          targetedAge: { $lt: 18 }
         }
-      ]);                         
-    return childrenContents
+      },
+      {
+        $addFields: {
+          viewCount: { $size: "$views" }
+        }
+      },
+      {
+        $project: {
+          views: 0,
+          mainFile: 0,
+          __v: 0,
+          updatedAt: 0
+        }
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      }
+    ]);
+    return childrenContents;
   }
 
   if (storyType === "featured") {
     const recentPosts = await Post.aggregate([
-        {
-          $addFields: {
-            viewCount: { $size: "$views" }
-          }
-        },
-        {
-          $project: {
-            views: 0,
-            mainFile: 0,
-            __v: 0,
-            updatedAt: 0
-          }
-        },
-        {
-          $sort: {
-            createdAt: -1
-          }
-        },
-        {
-          $limit: limit
+      {
+        $addFields: {
+          viewCount: { $size: "$views" }
         }
-      ]);   
+      },
+      {
+        $project: {
+          views: 0,
+          mainFile: 0,
+          __v: 0,
+          updatedAt: 0
+        }
+      },
+      {
+        $sort: {
+          createdAt: -1
+        }
+      },
+      {
+        $skip: skip
+      },
+      {
+        $limit: limit
+      }
+    ]);
     return recentPosts;
   }
-
-}
+};
 
 const aPostData = async (
   payload: JwtPayload,
   postID: string
 ) => {
   const user = await User.isUserExist({ _id: payload.userID });
+  
+  if (!user.idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  }
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
   }
@@ -318,6 +403,9 @@ const subscribe = async (
   }
 ) => {
   const user = await User.isUserExist({_id: paylaod.userID });
+  if (!user.idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  }
   const packageData = await Subscription.findById(data.planID);
   if (!packageData) {
     throw new ApiError(StatusCodes.NOT_FOUND,"We can't find your package!")
@@ -421,8 +509,10 @@ const subscribeFiled = async (
 const categoryzeData = async (
   payload: JwtPayload
 ) => {
-  await User.isUserExist({ _id: payload.userID });
-
+  const isExistUser = await User.isUserExist({ _id: payload.userID });
+  if (!isExistUser.idVerifyed) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  }
   const [types, categories, durations, languages, ages] = await Promise.all([
     Post.distinct('type'),
     Post.distinct('category'),
@@ -445,33 +535,54 @@ const categoryzeData = async (
 };
 
 const searchData = async (
-  searchString: string
+  searchString: string,
+  page = 1,
+  limit = 10
 ) => {
-  
   if (!searchString) {
-    return [];
+    return { results: [], total: 0, totalPages: 0, currentPage: page };
   }
-  
-  const regex = new RegExp(searchString, 'i');
 
-  const results = await Post.find({
-    $or: [
-      { title: regex },
-      { singerName: regex },
-      { description: regex },
-      { category: regex },
-      { type: regex },
-    ]
-  })
-  .populate('createdBy', 'name email')
-  .lean();
+  const regex = new RegExp(searchString, 'i');
+  const skip = (page - 1) * limit;
+
+  const [results, total] = await Promise.all([
+    Post.find({
+      $or: [
+        { title: regex },
+        { singerName: regex },
+        { description: regex },
+        { category: regex },
+        { type: regex },
+      ]
+    })
+    .populate('createdBy', 'name email')
+    .skip(skip)
+    .limit(limit)
+    .lean(),
+
+    Post.countDocuments({
+      $or: [
+        { title: regex },
+        { singerName: regex },
+        { description: regex },
+        { category: regex },
+        { type: regex },
+      ]
+    })
+  ]);
 
   const resultsWithViewCount = results.map(post => ({
     ...post,
     viewCount: post.views?.length || 0
   }));
 
-  return resultsWithViewCount
+  return {
+    results: resultsWithViewCount,
+    total,
+    totalPages: Math.ceil(total / limit),
+    currentPage: page
+  };
 };
 
 export const UserService = {

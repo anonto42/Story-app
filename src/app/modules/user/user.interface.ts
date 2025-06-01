@@ -7,6 +7,7 @@ export interface IUser extends Document {
   requestedAccountType: ACCOUNT_TYPE
   name: string;
   role: USER_ROLES;
+  idVerifyed: boolean;
   subscription: {
     stripeCustomerID: string;
     limite: number;

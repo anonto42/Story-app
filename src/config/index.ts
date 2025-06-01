@@ -14,6 +14,7 @@ export default {
     aws_resion: process.env.AWS_REGION!,
     aws_access_key: process.env.AWS_ACCESS_KEY!,
     aws_secret_key: process.env.AWS_SECRET_KEY!,
+    aws_s3_bucket : process.env.S3_BUCKET!
   },
   jwt: {
     jwt_secret: process.env.JWT_SECRET,

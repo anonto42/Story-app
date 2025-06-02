@@ -210,7 +210,6 @@ const conditionUpdate = catchAsync(
   }
 );
 
-
 export const AdminController = {
   OverView,
   makeAPost,

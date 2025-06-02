@@ -10,11 +10,11 @@ export default {
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
   strip_secret_key: process.env.STRIPE_SECRET_KEY,
   server_url: process.env.SERVER_URL!,
-  aws:{
-    aws_resion: process.env.AWS_REGION!,
-    aws_access_key: process.env.AWS_ACCESS_KEY!,
-    aws_secret_key: process.env.AWS_SECRET_KEY!,
-    aws_s3_bucket : process.env.S3_BUCKET!
+  open_ai_api_key: process.env.OPENAI_API_KEY!,
+  cloudinary: {
+    cloud_name: process.env.CLOUD_NAME!,
+    api_key: process.env.CLOUD_API_KEY!,
+    api_secret: process.env.CLOUD_API_SECRET!
   },
   jwt: {
     jwt_secret: process.env.JWT_SECRET,

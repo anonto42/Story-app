@@ -26,8 +26,8 @@ services:
   
   nginx:
     build: 
-      context: ./Docker
-      dockerfile: Dockerfile.nginx
+      context: .
+      dockerfile: ./Docker/Dockerfile.nginx
     container_name: nginx
     hostname: nginx
     environment:
@@ -53,8 +53,8 @@ services:
 
   server1:
     build: 
-      context: ./Docker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./DockerDockerfile
     container_name: server1
     hostname: server1
     env_file:
@@ -78,8 +78,8 @@ services:
 
   server2:
       build: 
-        context: ./Docker
-        dockerfile: Dockerfile
+        context: .
+        dockerfile: ./DockerDockerfile
       container_name: server2
       hostname: server2
       env_file:
@@ -103,8 +103,8 @@ services:
 
   server3:
       build: 
-        context: ./Docker
-        dockerfile: Dockerfile
+        context: .
+        dockerfile: ./DockerDockerfile
       container_name: server3
       hostname: server3
       env_file:

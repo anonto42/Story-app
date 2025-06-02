@@ -9,7 +9,7 @@ import unlinkFile from "../../../shared/unlinkFile"
 import { Subscription } from "../subscription/subscription.model"
 import { USER_STSTUS } from "../../../enums/user"
 import { SUBSCRIPTION_TYPE } from "../../../enums/subscription"
-
+import { processVideoWithSubtitles } from "../cloudinary/config"
 
 const OverView = async (
     payload: JwtPayload
@@ -209,40 +209,52 @@ const doAPost = async (
         mainFilePath
     }:any
 ) => {
-  const {
-    type,
-    category,
-    title,
-    singerName,
-    targetedAge,
-    duration,
-    description,
-    language
-  } = req.body;
+  try {
+    const {
+      type,
+      category,
+      title,
+      singerName,
+      targetedAge,
+      duration,
+      description,
+      language
+    } = req.body;
+  
+      await User.isUserExist({_id: req.user.userID})
+    // Validate required files
+    if (!coverPhotoPath || !mainFilePath ) {
+      throw new Error('All required files (coverPhoto, media) must be uploaded.');
+    }
+  
+    const cloudinaryVideoPath = await processVideoWithSubtitles(mainFilePath);
 
-    await User.isUserExist({_id: req.user.userID})
- 
-  // Validate required files
-  if (!coverPhotoPath || !mainFilePath ) {
-    throw new Error('All required files (coverPhoto, media) must be uploaded.');
+    if(!cloudinaryVideoPath) throw new ApiError(
+        StatusCodes.NOT_ACCEPTABLE,
+        "can't upload to the cloudinary!"
+    )
+  
+    unlinkFile(mainFilePath);
+  
+    // Create the Post
+    const post = await Post.create({
+      type: type.toString(),
+      category,
+      title,
+      singerName,
+      targetedAge,
+      duration,
+      description,
+      coverPhoto: coverPhotoPath,
+      mainFile: cloudinaryVideoPath,
+      language: language,
+      createdBy: user._id,
+    });
+  
+    return post;
+  } catch (error) {
+    unlinkFile(mainFilePath)
   }
-
-  // Create the Post
-  const post = await Post.create({
-    type: type.toString(),
-    category,
-    title,
-    singerName,
-    targetedAge,
-    duration,
-    description,
-    coverPhoto: coverPhotoPath,
-    mainFile: mainFilePath,
-    language: language,
-    createdBy: user._id,
-  });
-
-  return post;
 };
 
 const deleteApost = async (

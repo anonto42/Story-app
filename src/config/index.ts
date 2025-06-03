@@ -11,6 +11,10 @@ export default {
   strip_secret_key: process.env.STRIPE_SECRET_KEY,
   server_url: process.env.SERVER_URL!,
   open_ai_api_key: process.env.OPENAI_API_KEY!,
+  database_user_name: process.env.MONGODB_ADMINUSERNAME!,
+  databse_user_password: process.env.MONGODB_ADMINPASSWORD!,
+  database_name: process.env.DATABASE_NAME!,
+  database_port: process.env.MONGODB_PORT!,
   cloudinary: {
     cloud_name: process.env.CLOUD_NAME!,
     api_key: process.env.CLOUD_API_KEY!,

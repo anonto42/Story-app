@@ -60,8 +60,7 @@ const createUserToDB = async (payload: Partial<IUser> ) => {
     contact: createUser.contact,
     profile: createUser.profile,
     location: createUser.location,
-    token,
-    otp
+    token
   }}
 };
 
@@ -73,8 +72,10 @@ const getUserProfileFromDB = async (
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
-  if (!isExistUser.idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  if ( isExistUser.role !== USER_ROLES.ADMIN ) {
+    if (!isExistUser.idVerifyed) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+    }
   }
   return isExistUser;
 };
@@ -88,8 +89,10 @@ const updateProfileToDB = async (
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }
-  if (!isExistUser.idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  if ( isExistUser.role !== USER_ROLES.ADMIN ) {
+    if (!isExistUser.idVerifyed) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+    }
   }
 
   //unlink file here
@@ -112,8 +115,10 @@ const getCondition = async (
   if (!condition) {
     throw new ApiError(StatusCodes.NOT_FOUND,"Condition and condition was not founded!");
   }
-  if (!isExistUser.idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  if ( isExistUser.role !== USER_ROLES.ADMIN ) {
+    if (!isExistUser.idVerifyed) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+    }
   }
   return condition.termsConditions || "";
 }
@@ -126,8 +131,10 @@ const getPolicy = async (
   if (!condition) {
     throw new ApiError(StatusCodes.NOT_FOUND,"Privacy and policy was not founded!");
   }
-  if (!isExistUser.idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  if ( isExistUser.role !== USER_ROLES.ADMIN ) {
+    if (!isExistUser.idVerifyed) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+    }
   }
   return condition.privacyPolicy || "";
 }
@@ -138,11 +145,10 @@ const addToPlaylist = async (
 ) => {
   const user = await User.isUserExist({_id: payload.userID });
   
-  if (!user.idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
-  }
-  if (!user.idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  if ( user.role !== USER_ROLES.ADMIN ) {
+    if (!user.idVerifyed) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+    }
   }
   const objectId = new Types.ObjectId(post_id);
 
@@ -181,8 +187,10 @@ const getPlaylist = async (
     throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
   }
 
-  if (!(user as any).idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  if ( user.role !== USER_ROLES.ADMIN ) {
+    if (!user.idVerifyed) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+    }
   }
 
   return user.playList;
@@ -202,8 +210,10 @@ const filterData = async (
 ) => {
   const user = await User.isUserExist({ _id: payload.userID }); 
 
-  if (!user.idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  if ( user.role !== USER_ROLES.ADMIN ) {
+    if (!user.idVerifyed) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+    }
   }
 
   const filter: any = {};
@@ -357,8 +367,10 @@ const aPostData = async (
 ) => {
   const user = await User.isUserExist({ _id: payload.userID });
   
-  if (!user.idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  if ( user.role !== USER_ROLES.ADMIN ) {
+    if (!user.idVerifyed) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+    }
   }
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, "User not found!");
@@ -403,8 +415,10 @@ const subscribe = async (
   }
 ) => {
   const user = await User.isUserExist({_id: paylaod.userID });
-  if (!user.idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  if ( user.role !== USER_ROLES.ADMIN ) {
+    if (!user.idVerifyed) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+    }
   }
   const packageData = await Subscription.findById(data.planID);
   if (!packageData) {
@@ -510,8 +524,10 @@ const categoryzeData = async (
   payload: JwtPayload
 ) => {
   const isExistUser = await User.isUserExist({ _id: payload.userID });
-  if (!isExistUser.idVerifyed) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+  if ( isExistUser.role !== USER_ROLES.ADMIN ) {
+    if (!isExistUser.idVerifyed) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, "User is not verified!");
+    }
   }
   const [types, categories, durations, languages, ages] = await Promise.all([
     Post.distinct('type'),

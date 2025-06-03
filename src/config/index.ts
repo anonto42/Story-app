@@ -10,7 +10,6 @@ export default {
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
   strip_secret_key: process.env.STRIPE_SECRET_KEY,
   server_url: process.env.SERVER_URL!,
-  open_ai_api_key: process.env.OPENAI_API_KEY!,
   database_user_name: process.env.MONGODB_ADMINUSERNAME!,
   databse_user_password: process.env.MONGODB_ADMINPASSWORD!,
   database_name: process.env.DATABASE_NAME!,

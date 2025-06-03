@@ -1,17 +1,10 @@
-import fs from "fs";
 import path from "path";
-import OpenAi from "openai";
 import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
 import config from "../../../config";
 import { v4 as uuidv4 } from "uuid";
-import ApiError from "../../../errors/ApiError";
-import { StatusCodes } from "http-status-codes";
 
 dotenv.config();
-
-// Setup OpenAI
-const openai = new OpenAi({ apiKey: config.open_ai_api_key })
 
 // Setup Cloudinary
 cloudinary.config({

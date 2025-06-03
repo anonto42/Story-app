@@ -29,17 +29,14 @@ services:
       context: .
       dockerfile: ./Docker/Dockerfile.nginx
     container_name: nginx
-    hostname: nginx
-    environment:
-      - 1111=PORT1
-      - 2222=PORT2
-      - 3333=PORT3
     volumes:
       - docker_db:/docker_db
     ports:
       - "80:80"
     depends_on:
-      - application
+      - server1
+      - server2
+      - server3
     networks:
       - docker_network
     deploy:
@@ -54,9 +51,8 @@ services:
   server1:
     build: 
       context: .
-      dockerfile: ./DockerDockerfile
+      dockerfile: ./Docker/Dockerfile
     container_name: server1
-    hostname: server1
     env_file:
       - .env
     volumes:
@@ -79,9 +75,8 @@ services:
   server2:
       build: 
         context: .
-        dockerfile: ./DockerDockerfile
+        dockerfile: ./Docker/Dockerfile
       container_name: server2
-      hostname: server2
       env_file:
         - .env
       volumes:
@@ -104,9 +99,8 @@ services:
   server3:
       build: 
         context: .
-        dockerfile: ./DockerDockerfile
+        dockerfile: ./Docker/Dockerfile
       container_name: server3
-      hostname: server3
       env_file:
         - .env
       volumes:

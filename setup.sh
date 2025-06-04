@@ -62,7 +62,7 @@ if [ -z "$CICD_USED" ]; then
     echo "2. Jenkins"
     read -p "Enter option (1 or 2): " CICD_OPTION
     if [ "$CICD_OPTION" == "1" ]; then
-      mv github .github 2>/dev/null
+      # mv github .github 2>/dev/null
       CICD_TYPE="github"
     elif [ "$CICD_OPTION" == "2" ]; then
       CICD_TYPE="jenkins"
@@ -77,17 +77,17 @@ if [ -z "$CICD_USED" ]; then
 fi
 
 # Environment variable setup
-if [ -z "$ENV_CHANGED" ]; then
-  read -p "Do you want to change env variables? (y/n): " CHANGE_ENV
-  if [[ "$CHANGE_ENV" =~ ^(n|N|no|NO)$ ]]; then
-    mv .env.sample .env 2>/dev/null
-    ENV_CHANGED=false
-  else
-    echo "🛠️ Please edit the .env.sample file manually and rename it to .env"
-    ENV_CHANGED=true
-  fi
-  save_config
-fi
+# if [ -z "$ENV_CHANGED" ]; then
+#   read -p "Do you want to change env variables? (y/n): " CHANGE_ENV
+#   if [[ "$CHANGE_ENV" =~ ^(n|N|no|NO)$ ]]; then
+#     cp .env.sample .env 2>/dev/null
+#     ENV_CHANGED=false
+#   else
+#     echo "🛠️ Please edit the .env.sample file manually and rename it to .env"
+#     ENV_CHANGED=true
+#   fi
+#   save_config
+# fi
 
 # Run the server
 if [ -z "$SERVER_RAN" ]; then

@@ -19,7 +19,7 @@ services:
       resources:
         limits:
           cpus: '0.5'       # half CPU core
-          memory: 512M 
+          memory: 512M      # 512 MB RAM
         reservations:
           cpus: '0.25'      # minimum CPU reserved
           memory: 256M      # minimum memory reserved

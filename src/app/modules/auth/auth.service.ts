@@ -7,7 +7,7 @@ import { emailTemplate } from "../../../shared/emailTemplate";
 import { emailHelper } from "../../../helpers/emailHelper";
 import { compare, hash } from "bcryptjs";
 import config from "../../../config";
-import jwt, { JwtPayload, Secret } from 'jsonwebtoken';
+import jwt, { Secret } from 'jsonwebtoken';
 
 const signIn = async ( 
     payload : {
@@ -98,7 +98,7 @@ const verifyOtp = async (
         'otpVerification.verificationType': ""
     }});
     
-    return true;
+    return { token };
 }
 
 const changePassword = async (

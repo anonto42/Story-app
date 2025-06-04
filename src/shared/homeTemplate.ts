@@ -230,7 +230,7 @@ export const HomeTemplate = `<!DOCTYPE html>
     p {
       font-size: 1.5rem;
       font-weight: 400;
-      color: #a0fff5cc;
+      color:rgba(255, 205, 67, 0.8);
       margin: 0 20px;
       line-height: 1.5;
     }

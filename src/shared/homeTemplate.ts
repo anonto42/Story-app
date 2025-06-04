@@ -251,7 +251,7 @@ export const HomeTemplate = `<!DOCTYPE html>
     <div class="container">
       <div class="icon">⚡</div>
       <h1>Server is Running</h1>
-      <p>Everything is online and fully operational. Ready for your requests!</p>
+      <p>Ready for your requests!</p>
     </div>
   </div>
 </body>

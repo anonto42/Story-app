@@ -94,7 +94,7 @@ if [ -z "$SERVER_RAN" ]; then
   read -p "Do you want to run the server now? (y/n): " RUN_SERVER
   if [[ "$RUN_SERVER" =~ ^(y|Y|yes|YES)$ ]]; then
     echo "🚀 Starting server with Docker Compose..."
-    docker compose up --build --force-recreate --remove-orphans -d
+    sudo docker compose up --build --force-recreate --remove-orphans -d
     SERVER_RAN=true
   else
     echo "⛔ Server launch skipped."

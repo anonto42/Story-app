@@ -389,9 +389,9 @@ const aPostData = async (
     post.views.push(user._id);
     await post.save();
     console.log(`User ${user._id} added to views`);
-  }
+  };
 
-  return {
+  const data: any = {
     _id: post._id,
     type: post.type,
     category: post.category,
@@ -404,6 +404,15 @@ const aPostData = async (
     mainFile: post.mainFile,
     language: post.language
   };
+
+  let isAdded = false;
+
+  user.playList.forEach( ( e: any )=> {
+    if (e.toString() === post._id!.toString()) isAdded = true;
+  })
+  data.isAddedtoPlaylist = isAdded
+
+  return data
 };
 
 const subscribe = async (

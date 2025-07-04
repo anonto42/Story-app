@@ -1,0 +1,15 @@
+[project]
+name = "python"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+    "ffmpeg>=1.4", # This ensures that the 'ffmpeg' command is available on the system (ensure it's installed on the system).
+    "ffmpeg-python>=0.2.0", # Python wrapper around FFmpeg
+    "openai-whisper>=20240930", # Whisper model for speech-to-text
+    "torch>=2.7.1", # PyTorch for Whisper's underlying model
+    "torchaudio>=2.7.1", # PyTorch audio processing library
+    "torchvision>=0.22.1", # PyTorch computer vision library (though you may not need this for Whisper)
+]

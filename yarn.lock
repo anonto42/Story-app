@@ -2003,11 +2003,6 @@ one-time@^1.0.0:
   dependencies:
     fn.name "1.x.x"
 
-openai@^5.0.1:
-  version "5.0.1"
-  resolved "https://registry.npmjs.org/openai/-/openai-5.0.1.tgz"
-  integrity sha512-Do6vxhbDv7cXhji/4ct1lrpZYMAOmjYbhyA9LJTuG7OfpbWMpuS+EIXkRT7R+XxpRB1OZhU/op4FU3p3uxU6gw==
-
 optionator@^0.9.3:
   version "0.9.4"
   resolved "https://registry.npmjs.org/optionator/-/optionator-0.9.4.tgz"

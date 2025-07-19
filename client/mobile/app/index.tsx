@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 
 const Index = () => {
-  return (
+  const router = useRouter();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.push('/langouage');
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+    return (
     <View style={style.container}>
       <LinearGradient
         colors={['#00C6FF', '#0072FF', "#ffffff"]}

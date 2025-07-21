@@ -1,52 +1,92 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, StyleSheet, Image } from 'react-native'
+import React,{ useState } from 'react'
+import LanguageButton from '@/components/ui/LanguageButton'
+import NextButton from '@/components/ui/NextButton';
+import StarWrapper from '@/components/layout/AppWrapper';
 import { useRouter } from 'expo-router';
 
-const Index = () => {
+const Langouage = () => {
+
+  const [selected, setSelected] = useState<string>();
+
   const router = useRouter();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push('/langouage');
-    }, 1000);
+  return (
+    <StarWrapper>
 
-    return () => clearTimeout(timer);
-  }, []);
+      <View style={style.container}>
 
-    return (
-    <View style={style.container}>
-      <LinearGradient
-        colors={['#00C6FF', '#0072FF', "#ffffff"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={style.box}
-      />
-    </View>
-  );
-};
+        <View style={style.chooseLanguageBox}>
+          <Image 
+            source={require('../assets/images/chooseLanguage.png')} 
+            style={style.chooseLanguageBoxImage} 
+          />
+        </View>
+
+        <View style={style.languageButtonBox}>
+
+          <LanguageButton
+            title="English"
+            imageSource="eng"
+            onPress={() => setSelected("eng")}
+            selected={selected === "eng"}
+          />
+
+          <LanguageButton
+            title="Español"
+            imageSource="esp"
+            onPress={() => setSelected("esp")}
+            selected={selected === "esp"}
+          />
+
+          <LanguageButton
+            title="Français"
+            imageSource="fra"
+            onPress={() => setSelected("fra")}
+            selected={selected === "fra"}
+          />
+
+          <LanguageButton
+            title="Deutsch"
+            imageSource="ger"
+            onPress={() => setSelected("ger")}
+            selected={selected === "ger"}
+          />
+          
+        </View>
+
+        <NextButton
+          title="Next"
+          onPress={() => router.push('/onboading') }
+        />
+
+      </View>
+
+    </StarWrapper>
+  )
+}
 
 const style = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#071B49',
+    // backgroundColor: '#071B49',
   },
-  box: {
-    width: 334,
-    height: 334,
-    borderRadius: 40,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+  chooseLanguageBox: { 
+    width: 274,
+    height: 268,
+    gap: 11
   },
-});
+  chooseLanguageBoxImage: {
+    width: 274,
+    height: 268,
+  },
+  languageButtonBox: {
+    gap: 11,
+    marginTop: 24,
+    marginBottom: 44,
+  },
+})
 
-export default Index;
+export default Langouage

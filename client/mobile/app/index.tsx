@@ -18,6 +18,10 @@ const Langouage = () => {
 
         <View style={style.chooseLanguageBox}>
           <Image 
+            source={require('../assets/images/chooseLanguageText.png')} 
+            style={style.chooseLanguageBoxImageText} 
+          />
+          <Image 
             source={require('../assets/images/chooseLanguage.png')} 
             style={style.chooseLanguageBoxImage} 
           />
@@ -79,8 +83,13 @@ const style = StyleSheet.create({
     gap: 11
   },
   chooseLanguageBoxImage: {
-    width: 274,
-    height: 268,
+    width: 200,
+    height: 200,
+    marginLeft: 40
+  },
+  chooseLanguageBoxImageText: {
+    width: 300,
+    height: 60,
   },
   languageButtonBox: {
     gap: 11,

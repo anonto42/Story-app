@@ -1,10 +1,21 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import React from 'react';
 import StarWrapper from '@/components/layout/AppWrapper';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
+import { useRouter } from 'expo-router';
 
 const Auth = () => {
+  const router = useRouter();  
+
+  const handleLogin = () => {
+    router.push('/(pages)/signin');
+  };
+
+  const handleSignUp = () => {
+    router.push('/(pages)/signup');
+  };
+  
   return (
     <StarWrapper>
       <View style={styles.mainBox}>
@@ -40,8 +51,32 @@ const Auth = () => {
         </Text>
 
         {/* Button */}
-        <View style={styles.buttonBox}>
+        <View style={styles.container}>
+      
+          {/* Solid Gradient Button */}
+          <TouchableOpacity style={styles.buttonWrapper}>
+            <LinearGradient
+              colors={['#d69c4a', '#bd6396', '#a020f0']} // 3-color gradient
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.gradientButton}
+            >
+              <Text style={styles.buttonText} onPress={handleSignUp}>Sign Up</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
+          {/* Gradient Border Button */}
+          <LinearGradient
+            colors={['#d69c4a', '#bd6396', '#a020f0']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.borderWrapper}
+          >
+            <TouchableOpacity style={styles.borderButton} onPress={handleLogin}>
+              <Text style={styles.buttonText2}>Login</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+          
         </View>
 
       </View>
@@ -79,7 +114,6 @@ const styles = StyleSheet.create({
   },
   gradientText: {
     fontSize: 28,
-    // fontWeight: 'bold',
     textAlign: 'center',
     width: 300,
   },
@@ -90,9 +124,47 @@ const styles = StyleSheet.create({
     fontFamily: "Lora-Regular",
     lineHeight: 24,
   },
-  buttonBox: {
-    
-  }
+  container: {
+    padding: 10,
+    gap: 10,
+    flexDirection: 'row'
+  },
+  buttonWrapper: {
+    width: 150,
+    height: 50,
+    borderRadius: 30,
+    overflow: 'hidden',
+  },
+  gradientButton: {
+    flex: 1,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  buttonText2: {
+    color: '#000',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  borderWrapper: {
+    width: 150,
+    height: 50,
+    overflow: 'hidden',
+    borderRadius: 30,
+    padding: 2,
+  },
+  borderButton: {
+    backgroundColor: "#c5adf7",
+    borderRadius: 26,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    alignItems: "center",
+  },
 });
 
 export default Auth;

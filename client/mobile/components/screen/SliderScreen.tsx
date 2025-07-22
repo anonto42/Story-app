@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -43,6 +44,7 @@ const slides = [
 export default function SliderScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList<any>>(null);
+  const router = useRouter();
 
   const onViewRef = useRef(({ viewableItems }: any) => {
     setCurrentIndex(viewableItems[0]?.index || 0);
@@ -56,8 +58,12 @@ export default function SliderScreen() {
   const handleArrowPress = (direction: 'left' | 'right') => {
     if (direction === 'left' && currentIndex > 0) {
       scrollToIndex(currentIndex - 1);
-    } else if (direction === 'right' && currentIndex < slides.length - 1) {
-      scrollToIndex(currentIndex + 1);
+    } else if (direction === 'right') {
+      if (currentIndex < slides.length - 1) {
+        scrollToIndex(currentIndex + 1);
+      } else {
+        router.push('/auth');
+      }
     }
   };
 
@@ -97,7 +103,10 @@ export default function SliderScreen() {
             keyExtractor={(item) => item.key}
             renderItem={({ item }) => (
             <View style={styles.slide}>
-                <Image source={item.image} style={styles.image} resizeMode="contain" />
+                {/* <Image source={item.image} style={styles.image} resizeMode="contain" /> */}
+                <View style={styles.shadowWrapper}>
+                  <Image source={item.image} style={styles.image} />
+                </View>
                 <Text style={styles.title}>{item.title}</Text>
                 <Text style={styles.description}>{item.description}</Text>
             </View>
@@ -131,10 +140,23 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 20,
   },
+  shadowWrapper: {
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 5, height: 5 },
+    shadowOpacity: 1,
+    shadowRadius: 20,
+    elevation: 5,
+    overflow: 'hidden',
+    borderRadius: 30,
+    padding: 5,
+  },
+
   image: {
     width: 250,
     height: 250,
     borderRadius: 20,
+    borderWidth: 3,
+    borderColor: '#E3B430',
   },
   title: {
     color: '#E3B430',

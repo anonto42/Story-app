@@ -1,13 +1,12 @@
 import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function PagesLayout() {
   return (
     <Tabs
         screenOptions={{
-            tabBarStyle: {
-                display: 'none'
-            }
+          tabBarStyle: {
+              display: 'none'
+          }
         }}
     >
       <Tabs.Screen
@@ -25,9 +24,16 @@ export default function PagesLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="signin"
         options={{
-          title: "Profile",
+          title: "Sign In",
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="signup"
+        options={{
+          title: "Sign Up",
           headerShown: false,
         }}
       />

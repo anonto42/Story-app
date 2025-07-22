@@ -37,6 +37,27 @@ export default function PagesLayout() {
           headerShown: false,
         }}
       />
+      <Tabs.Screen
+        name="forgotpassword"
+        options={{
+          title: "Forgot Password",
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="verifyotp"
+        options={{
+          title: "Verify OTP",
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="createnewpassword"
+        options={{
+          title: "Create New Password",
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

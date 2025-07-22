@@ -150,7 +150,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 5,
   },
-
   image: {
     width: 250,
     height: 250,
@@ -162,14 +161,16 @@ const styles = StyleSheet.create({
     color: '#E3B430',
     fontSize: 18,
     marginTop: 20,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     textAlign: 'center',
+    fontFamily: 'Lora-Bold',
   },
   description: {
     color: '#faca43',
     fontSize: 14,
     marginTop: 10,
     textAlign: 'center',
+    fontFamily: 'Lora-Regular',
     lineHeight: 22,
   },
   pagination: {

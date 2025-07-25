@@ -8,12 +8,28 @@ import { useRouter } from 'expo-router';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
-  const router = useRouter();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleSubmit = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email) {
+      setError('Email is required.');
+      return;
+    } else if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    setError('');
     console.log('Password reset requested for:', email);
     setIsSubmitted(true);
+
+    setTimeout(() => {
+      router.push('/(pages)/verifyotp');
+    }, 2000);
   };
 
   return (
@@ -21,22 +37,22 @@ export default function ForgotPasswordScreen() {
       <View style={styles.container}>
         <Text style={styles.title}>Reset Password</Text>
         <Text style={styles.subtitle}>
-          {isSubmitted 
+          {isSubmitted
             ? "We've sent a password reset link to your email"
             : "Enter your email to receive a reset link"}
         </Text>
 
         {!isSubmitted ? (
           <>
-            {/* Email Field */}
+            {/* Email Input */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email Address</Text>
-              <View style={styles.blurContainer}>
+              <View style={[styles.blurContainer, error && styles.inputErrorBorder]}>
                 <BlurView intensity={40} tint="extraLight" style={styles.blurView}>
                   <TextInput
                     style={styles.input}
                     placeholder="your@email.com"
-                    placeholderTextColor="#ffff"
+                    placeholderTextColor="#fff"
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -45,16 +61,17 @@ export default function ForgotPasswordScreen() {
                   />
                 </BlurView>
               </View>
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
             </View>
 
             {/* Submit Button */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.buttonContainer}
               onPress={handleSubmit}
               disabled={!email}
             >
-              <LinearGradient 
-                colors={['#f4a51c', '#c822ff']} 
+              <LinearGradient
+                colors={['#f4a51c', '#c822ff']}
                 style={[styles.button, !email && styles.disabledButton]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -87,14 +104,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     color: '#fff',
-    fontFamily: "Lora-Bold",
+    fontFamily: 'Lora-Bold',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
     color: '#ccc',
-    fontFamily: "Lora-Regular",
+    fontFamily: 'Lora-Regular',
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -104,24 +121,34 @@ const styles = StyleSheet.create({
   label: {
     color: '#fff',
     marginBottom: 8,
-    fontFamily: "Lora-Bold",
+    fontFamily: 'Lora-Bold',
     fontSize: 15,
   },
   blurContainer: {
     borderRadius: 10,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   blurView: {
     padding: 2,
   },
   input: {
-    // backgroundColor: 'rgba(10, 21, 71, 0.3)',
     color: '#fff',
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 8,
-    fontFamily: "Lora-Regular",
+    fontFamily: 'Lora-Regular',
     fontSize: 15,
+  },
+  inputErrorBorder: {
+    borderColor: '#ff6b6b',
+  },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 13,
+    fontFamily: 'Lora-Regular',
+    marginTop: 6,
   },
   buttonContainer: {
     marginTop: 20,
@@ -134,12 +161,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   disabledButton: {
-    // opacity: 0.6,
+    opacity: 0.5,
   },
   buttonText: {
     color: '#fff',
     fontSize: 17,
-    fontFamily: "Lora-Bold",
+    fontFamily: 'Lora-Bold',
   },
   successContainer: {
     alignItems: 'center',
@@ -150,7 +177,7 @@ const styles = StyleSheet.create({
   },
   successText: {
     color: '#fff',
-    fontFamily: "Lora-Regular",
+    fontFamily: 'Lora-Regular',
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
@@ -161,7 +188,7 @@ const styles = StyleSheet.create({
   },
   backToLoginText: {
     color: '#fcb900',
-    fontFamily: "Lora-Bold",
+    fontFamily: 'Lora-Bold',
     fontSize: 15,
     textDecorationLine: 'underline',
   },

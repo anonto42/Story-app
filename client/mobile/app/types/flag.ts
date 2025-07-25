@@ -1,0 +1,1 @@
+export type FlagProps = "eng" | "esp" | "fra" | "ger";

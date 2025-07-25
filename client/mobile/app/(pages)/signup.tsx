@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +15,8 @@ import StarWrapper from '@/components/layout/AppWrapper';
 import { useRouter } from 'expo-router';
 
 export default function SignUpScreen() {
-    const router = useRouter();
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -19,25 +27,47 @@ export default function SignUpScreen() {
     agreeToTerms: false
   });
 
+  const [errors, setErrors] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    location: '',
+    password: '',
+    confirmPassword: ''
+  });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleChange = (name: string, value: string) => {
+  const handleChange = (name: string, value: string | boolean) => {
     setFormData({
       ...formData,
       [name]: value
     });
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  const validateForm = () => {
+    const newErrors: any = {};
 
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
+    if (!formData.name.trim()) newErrors.name = 'Name is required.';
+    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required.';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email is invalid.';
+    }
+    if (!formData.location.trim()) newErrors.location = 'Location is required.';
+    if (!formData.password) newErrors.password = 'Password is required.';
+    if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters.';
+    if (!formData.confirmPassword) newErrors.confirmPassword = 'Confirm your password.';
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match.';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = () => {
+    if (!validateForm()) return;
     console.log('Form submitted:', formData);
   };
 
@@ -48,77 +78,39 @@ export default function SignUpScreen() {
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Join us to get started</Text>
 
-          {/* Name Field */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Full Name</Text>
-            <View style={styles.blurContainer}>
-              <BlurView intensity={40} tint="extraLight" style={styles.blurView}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="John Doe"
-                  placeholderTextColor="#fff"
-                  value={formData.name}
-                  onChangeText={(text) => handleChange('name', text)}
-                />
-              </BlurView>
+          {/* Input Fields */}
+          {[
+            { label: 'Full Name', name: 'name', placeholder: 'John Doe' },
+            { label: 'Phone Number', name: 'phone', placeholder: '+1 234 567 8900', keyboardType: 'phone-pad' },
+            { label: 'Email', name: 'email', placeholder: 'example@email.com', keyboardType: 'email-address' },
+            { label: 'Location', name: 'location', placeholder: 'City, Country' }
+          ].map(({ label, name, placeholder, keyboardType }) => (
+            <View key={name} style={styles.inputContainer}>
+              <Text style={styles.label}>{label}</Text>
+              {/* @ts-ignore */}
+              <View style={[styles.blurContainer, errors[name] && styles.errorBorder]}>
+                <BlurView intensity={40} tint="extraLight" style={styles.blurView}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={placeholder}
+                    placeholderTextColor="#fff"
+                    // @ts-ignore
+                    value={formData[name]}
+                    onChangeText={(text) => handleChange(name, text)}
+                    keyboardType={keyboardType as any}
+                    autoCapitalize="none"
+                  />
+                </BlurView>
+              </View>
+              {/* @ts-ignore */}
+              {errors[name] ? <Text style={styles.errorText}>{errors[name]}</Text> : null}
             </View>
-          </View>
+          ))}
 
-          {/* Phone Field */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Phone Number</Text>
-            <View style={styles.blurContainer}>
-              <BlurView intensity={40} tint="extraLight" style={styles.blurView}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="+1 234 567 8900"
-                  placeholderTextColor="#fff"
-                  keyboardType="phone-pad"
-                  value={formData.phone}
-                  onChangeText={(text) => handleChange('phone', text)}
-                />
-              </BlurView>
-            </View>
-          </View>
-
-          {/* Email Field */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <View style={styles.blurContainer}>
-              <BlurView intensity={40} tint="extraLight" style={styles.blurView}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="example@email.com"
-                  placeholderTextColor="#fff"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={formData.email}
-                  onChangeText={(text) => handleChange('email', text)}
-                />
-              </BlurView>
-            </View>
-          </View>
-
-          {/* Location Field */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Location</Text>
-            <View style={styles.blurContainer}>
-              <BlurView intensity={40} tint="extraLight" style={styles.blurView}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="City, Country"
-                  placeholderTextColor="#fff"
-                  value={formData.location}
-                  onChangeText={(text) => handleChange('location', text)}
-                />
-              </BlurView>
-            </View>
-          </View>
-
-          {/* Password Field */}
+          {/* Password */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
-            <View style={styles.blurContainer}>
+            <View style={[styles.blurContainer, errors.password && styles.errorBorder]}>
               <BlurView intensity={40} tint="extraLight" style={styles.blurView}>
                 <View style={styles.passwordInputContainer}>
                   <TextInput
@@ -129,22 +121,19 @@ export default function SignUpScreen() {
                     value={formData.password}
                     onChangeText={(text) => handleChange('password', text)}
                   />
-                  <TouchableOpacity onPress={togglePasswordVisibility} style={styles.eyeIcon}>
-                    <Ionicons 
-                      name={showPassword ? 'eye-off' : 'eye'} 
-                      size={20} 
-                      color="#fff" 
-                    />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                    <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#fff" />
                   </TouchableOpacity>
                 </View>
               </BlurView>
             </View>
+            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
           </View>
 
-          {/* Confirm Password Field */}
+          {/* Confirm Password */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Confirm Password</Text>
-            <View style={styles.blurContainer}>
+            <View style={[styles.blurContainer, errors.confirmPassword && styles.errorBorder]}>
               <BlurView intensity={40} tint="extraLight" style={styles.blurView}>
                 <View style={styles.passwordInputContainer}>
                   <TextInput
@@ -155,23 +144,20 @@ export default function SignUpScreen() {
                     value={formData.confirmPassword}
                     onChangeText={(text) => handleChange('confirmPassword', text)}
                   />
-                  <TouchableOpacity onPress={toggleConfirmPasswordVisibility} style={styles.eyeIcon}>
-                    <Ionicons 
-                      name={showConfirmPassword ? 'eye-off' : 'eye'} 
-                      size={20} 
-                      color="#fff" 
-                    />
+                  <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
+                    <Ionicons name={showConfirmPassword ? 'eye-off' : 'eye'} size={20} color="#fff" />
                   </TouchableOpacity>
                 </View>
               </BlurView>
             </View>
+            {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
           </View>
 
-          {/* Terms Checkbox */}
+          {/* Terms & Conditions */}
           <View style={styles.termsContainer}>
             <Checkbox
               value={formData.agreeToTerms}
-              onValueChange={(value: boolean) => handleChange('agreeToTerms', value.toString())}
+              onValueChange={(value) => handleChange('agreeToTerms', value)}
               color={formData.agreeToTerms ? '#f4a51c' : undefined}
               style={styles.checkbox}
             />
@@ -181,13 +167,13 @@ export default function SignUpScreen() {
           </View>
 
           {/* Sign Up Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.buttonContainer}
             onPress={handleSubmit}
             disabled={!formData.agreeToTerms}
           >
-            <LinearGradient 
-              colors={['#f4a51c', '#c822ff']} 
+            <LinearGradient
+              colors={['#f4a51c', '#c822ff']}
               style={[styles.button, !formData.agreeToTerms && styles.disabledButton]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -196,6 +182,7 @@ export default function SignUpScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
+          {/* Already have account */}
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Already have an account? </Text>
             <TouchableOpacity onPress={() => router.push('/(pages)/signin')}>
@@ -220,14 +207,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     color: '#fff',
-    fontFamily: "Lora-Bold",
+    fontFamily: 'Lora-Bold',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
     color: '#ccc',
-    fontFamily: "Lora-Regular",
+    fontFamily: 'Lora-Regular',
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -237,24 +224,34 @@ const styles = StyleSheet.create({
   label: {
     color: '#fff',
     marginBottom: 8,
-    fontFamily: "Lora-Bold",
+    fontFamily: 'Lora-Bold',
     fontSize: 15,
   },
   blurContainer: {
     borderRadius: 10,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   blurView: {
     padding: 2,
   },
   input: {
-    // backgroundColor: 'rgba(10, 21, 71, 0.3)',
     color: '#fff',
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 8,
-    fontFamily: "Lora-Regular",
+    fontFamily: 'Lora-Regular',
     fontSize: 15,
+  },
+  errorBorder: {
+    borderColor: '#ff6b6b',
+  },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 13,
+    fontFamily: 'Lora-Regular',
+    marginTop: 6,
   },
   passwordInputContainer: {
     flexDirection: 'row',
@@ -280,7 +277,7 @@ const styles = StyleSheet.create({
   },
   termsText: {
     color: '#ccc',
-    fontFamily: "Lora-Regular",
+    fontFamily: 'Lora-Regular',
     fontSize: 14,
   },
   termsLink: {
@@ -298,12 +295,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   disabledButton: {
-    // opacity: 0.6,
+    opacity: 0.6,
   },
   buttonText: {
     color: '#fff',
     fontSize: 17,
-    fontFamily: "Lora-Bold",
+    fontFamily: 'Lora-Bold',
   },
   loginContainer: {
     flexDirection: 'row',
@@ -312,11 +309,11 @@ const styles = StyleSheet.create({
   },
   loginText: {
     color: '#ccc',
-    fontFamily: "Lora-Regular",
+    fontFamily: 'Lora-Regular',
   },
   loginLink: {
     color: '#fcb900',
-    fontFamily: "Lora-Bold",
+    fontFamily: 'Lora-Bold',
     textDecorationLine: 'underline',
   },
 });

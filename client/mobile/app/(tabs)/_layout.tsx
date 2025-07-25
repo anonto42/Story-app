@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
     elevation: 60,
     height: 80,
     borderTopWidth: 1,
+    borderColor: "#ffffff",
     paddingTop: 5,
     zIndex: 999,
   },

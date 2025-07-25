@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     zIndex: 1,
   },
   overlay: {
